@@ -1,0 +1,559 @@
+
+; play.vids.system.a
+
+; Play video files in all graphics modes
+; December 25, 2022
+; (c) 2022 by Frank Milliron, Lombard $oftware
+; https://github.com/frankmilliron/play.vids.system
+
+; ProRWTS2 by Peter Ferrie AKA qkumba
+; https://github.com/peterferrie/prorwts2
+
+; "acme play.vids.system.a" to assemble
+
+
+; Playback Modes set in VidType:
+; #1 - file_type $5B (ANM) - aux_type $1001 = GR mode playback
+; #2 - file_type $5B (ANM) - aux_type $1002 = DGR mode playback
+; #3 - file_type $5B (ANM) - aux_type $1003 = HGR mode playback
+; #4 - file_type $5B (ANM) - aux_type $1004 = DHGR mode playback
+;  * ANM "Animation"
+
+; Memory Map:
+; Player core relocated to $C00-1000 ($400)
+; ProRWTS2 installed to $1000-1100 ($100)
+; ProRWTS block buffer $1100-1300 ($200)
+; ProRWTS tree buffer $1300-1500 ($200)
+
+
+!cpu 6502
+!to "BASIS.SYSTEM#ff0000",plain
+!symbollist "BASIS.SYSTEM.list.txt"
+
+*=$2000
+
+
+; ****************************************************************
+; *                           Constants                          *
+; ****************************************************************
+
+EmuVar         = $76      ; used for emulator test & playback
+HGR_Page       = $77      ; used by ROM graphics clear routine
+LoadEOR        = $78      ; $400 <--> $800 or $2000 <--> $4000
+VidType        = $79      ; picked up from GET_FILE_ATTRIBUTES
+VidSize        = $7A      ; set based on video type
+
+VidName        = $300     ; video file to play
+Reloc          = $C00     ; video player code relocated here
+MLI            = $BF00    ; ProDOS Machine Language Interface entry
+MACHID         = $BF98    ; ProDOS Machine Identification Byte
+
+Keyboard       = $C000    ; get keypress
+KeyStrobe      = $C010    ; clear keyboard strobe
+VBL            = $C019    ; vertical blank
+SS_Main        = $C004    ; write to main mem
+SS_Aux         = $C005    ; write to aux mem
+SS_40col       = $C00C    ; set 40-column mode
+SS_80col       = $C00D    ; set 80-column mode
+SS_Border      = $C034    ; set //gs border color
+SS_Speed       = $C036    ; set //gs processor speed
+SS_Float       = $C04F    ; test for floating bus
+SS_Grfx        = $C050    ; graphics mode
+SS_Full        = $C052    ; full-screen mode
+SS_Page1       = $C054    ; show graphics page 1
+SS_Page2       = $C055    ; show graphics page 2
+SS_Lores       = $C056    ; turn on lores graphics
+SS_Hires       = $C057    ; turn on hires graphics
+SS_DblOn       = $C05E    ; turn on double graphics modes
+SS_DblOff      = $C05F    ; turn off double graphics modes
+
+ROM_HClr       = $F3F2    ; clear hires screen
+ROM_Home       = $FC58    ; clear text screen 1
+ROM_Text       = $FB2F    ; exit graphics mode
+ROM_Pwrup      = $FB6F    ; set reset vector checksum
+ROM_TestGS     = $FE1F    ; test for //gs
+
+;ProRWTS2-specific:
+auxreq         = $51      ; set to 1 to read to aux memory
+sizelo         = $52      ; size of data to load
+sizehi         = $53      ; size of data to load
+reqcmd         = $54      ; set to 1 for cmdread
+ldrlo          = $55      ; address to load the data
+ldrhi          = $56      ; address to load the data
+namlo          = $57      ; name of file to access
+namhi          = $58      ; name of file to access
+treeidx        = $5B      ; tree index
+blkindx        = $F8      ; block index
+hddrdwrpart    = $1000    ; read part of file
+
+
+; ****************************************************************
+; *                  Create BASIS.SYSTEM Format                  *
+; ****************************************************************
+
+; When a file is selected, ProDOS launches /VOL/BASIS.SYSTEM with:
+; 1) The ProDOS prefix set to the directory containing the selected file
+; 2) The filename of the selected file stored at $2006
+; 3) $280 is set to the name of the root volume
+; 4) $380 is set to the name of the launched SYS file (ie, /VOL/BASIS.SYSTEM)
+
+         jmp   Start
+
+         !hex  EE EE      ; signifies launchable prodos file
+         !byte $41        ; prodos path buffer length (65 bytes)
+         !fill 65,0       ; prodos full path buffer
+
+Start    sta   KeyStrobe  ; clear stray keypresses
+         jsr   ROM_Home
+
+MoveFilename              ; (should be at address $2047 here)
+         ldy   #$41       ; copy filename from $2006 to $300
+-        lda   $2006,y
+         ;and   #$DF       ; convert name to uppercase ?????
+         sta   VidName,y
+         dey
+         bpl   -
+
+GetAttributes
+         jsr   MLI
+         !byte $C4        ; get file attributes
+         !word C4_Parms
+
+         lda   C4_Parms+4 ; file_type
+         cmp   #$5B       ; must be $5B (ANM) "Animation"
+         beq   SetType
+         jmp   Exit+Reloc ; we haven't relocated yet
+
+SetType  lda   C4_Parms+5 ; low byte of aux_type
+         sta   VidType
+
+ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
+
+         sta   SS_Aux
+CopyPro  lda   $1000,y    ; Y set to zero by init
+         sta   $1000,y    ; copy ProRWTS2 to AUX
+         iny
+         bne   CopyPro
+         sta   SS_Main
+
+         lda   #>VidName
+         sta   namhi
+         lda   #<VidName
+         sta   namlo
+         lda   #1         ; cmdread
+         sta   reqcmd
+         lda   #0
+         sta   ldrlo
+         sta   sizelo
+         sta   auxreq
+
+RelocPlayer
+         ldy   #0         ; total < $400 bytes
+-        lda   Relocated,y
+         sta   Reloc,y
+         lda   Relocated+$100,y
+         sta   Reloc+$100,y
+         lda   Relocated+$200,y
+         sta   Reloc+$200,y
+         lda   Relocated+$300,y
+         sta   Reloc+$300,y
+         dey
+         bne   -
+         jmp   Reloc
+
+C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
+         !byte   $0a      ; param_count
+         !word   VidName  ; pathname
+         !byte   0        ; access
+         !byte   0        ; file_type
+         !word   0        ; aux_type
+         !byte   0        ; storage_type
+         !word   0        ; blocks_used
+         !word   0        ; mod_date
+         !word   0        ; mod_time
+         !word   0        ; create_date
+         !word   0        ; create_time
+
+
+; ****************************************************************
+; *                     Initialize Everything                    *
+; ****************************************************************
+
+Relocated
+!pseudopc Reloc {
+
+         jsr   EmuTest
+         jsr   TestGS
+         jsr   SetReset
+
+         lda   VidType
+         cmp   #1
+         beq   SetupGR
+         cmp   #2
+         beq   SetupDGR
+         cmp   #3
+         beq   SetupHGR
+         cmp   #4
+         beq   SetupDHGR
+         jmp   Exit
+
+SetupGR
+         lda   #$04       ; $400
+         sta   VidSize
+         sta   sizehi     ; can't open file for read without these
+         sta   ldrhi
+         lda   #$0C
+         sta   LoadEOR    ; change load between $400 and $800
+         jsr   hddopendir
+         jsr   Grfx
+         jmp   Play
+
+SetupDGR
+         lda   #$04
+         sta   VidSize
+         sta   sizehi     
+         sta   ldrhi
+         lda   #$0C
+         sta   LoadEOR
+         jsr   Grfx
+         jmp   SetupAux
+
+SetupHGR
+         lda   #$20
+         sta   VidSize    ; $2000
+         sta   sizehi
+         sta   ldrhi
+         lda   #$60
+         sta   LoadEOR    ; change load between $2000 and $4000
+         jsr   hddopendir
+         jsr   Grfx
+         jmp   Play
+
+SetupDHGR
+         lda   #$20
+         sta   VidSize
+         sta   sizehi
+         sta   ldrhi
+         lda   #$10
+         sta   BlkIndex+1 ; has to be larger for DHGR ??
+         lda   #$60
+         sta   LoadEOR
+         jsr   Grfx       ; fall through
+
+SetupAux jsr   hddopendir
+
+         sta   SS_Aux
+CopyTree lda   $1300,x    ; X is set by hddopendir
+         sta   $1300,x
+         lda   $1400,x
+         sta   $1400,x    ; copy ProRWTS2 tree buffer to AUX
+         inx
+         bne   CopyTree
+Adjust   sta   SS_Aux
+CopyBlk  lda   $1100,x
+         sta   $1100,x
+         lda   $1200,x
+         sta   $1200,x    ; copy ProRWTS2 block buffer to AUX
+         inx
+         bne   CopyBlk
+         beq   Resume
+
+
+; ****************************************************************
+; *                    Main Playback Routine                     *
+; ****************************************************************
+
+Play     lda   #0
+         sta   auxreq     ; main mem
+         lda   VidSize    ; changed based on file attributes
+         sta   sizehi     ; on each load
+         jsr   hddrdwrpart
+         bcs   Exit1      ; quit at end of file
+
+         lda   VidType    ; single-res modes done
+         cmp   #1
+         beq   PageFlip
+         cmp   #3
+         beq   PageFlip
+
+         lda   blkindx
+BlkIndex cmp   #2         ; watch for 64kb wrap-around
+         beq   Adjust
+Resume   lda   #1         ; load second part in aux
+         sta   auxreq
+         lda   VidSize
+         sta   sizehi
+         jsr   hddrdwrpart
+         bcs   Exit1
+
+PageFlip bit   SS_Page1
+         lda   PageFlip+1
+         eor   #1         ; flip between showing page 1 and 2
+         sta   PageFlip+1
+
+         lda   ldrhi
+         eor   LoadEOR    ; flip between loading to page 1 and 2
+         sta   ldrhi
+
+ChkKey   lda   Keyboard
+         bpl   Play       ; no key pressed
+         jmp   Key
+
+Exit1    jmp   Exit
+
+
+; ****************************************************************
+; *                       Keypress Handler                       *
+; ****************************************************************
+
+Key      sta   KeyStrobe
+
+Rew      cmp   #$88       ; left arrow key pressed? ($08+80)
+         bne   FastFor
+         ldx   treeidx
+         beq   Play       ; if treeidx is already 0 don't rewind
+         dex
+         beq   Rew1       ; if it's 1, decrement 1
+         dex              ; otherwise decrement 2
+Rew1     stx   treeidx
+         jmp   DoReset1   ; restart playback using reset routine
+
+FastFor  cmp   #$95       ; right arrow key pressed? ($15+80)
+         bne   Pause
+         inc   treeidx
+         jmp   DoReset1
+
+Pause    cmp   #$A0       ; space Bar pressed? ($20+80)
+         bne   Single
+Pause1   lda   Keyboard
+         bpl   Pause1     ; test for second keypress
+         cmp   #$9B       ; escape key pressed? ($1B+80)
+         beq   Exit2
+         cmp   #$A0
+         beq   Pause2
+         bit   KeyStrobe
+         jmp   Pause1
+Pause2   bit   KeyStrobe
+         jmp   Play
+
+Single   cmp   #$B1       ; "1" key pressed? ($31+80)
+         bne   Double
+         bit   SS_DblOff  ; turn off double graphics mode
+         jmp   Play
+
+Double   cmp   #$B2       ; "2" key pressed? ($32+80)
+         bne   Esc
+         bit   SS_DblOn   ; turn on double graphics mode
+         jmp   Play
+
+Esc      cmp   #$9B       ; escape key pressed? ($1B+80)
+         beq   Exit2
+         jmp   Play
+
+Exit2    jmp   Exit
+
+
+; ****************************************************************
+; *                     Setup Graphics Modes                     *
+; ****************************************************************
+
+Grfx     sta   KeyStrobe  ; Clear keyboard strobe
+         sta   SS_Grfx
+         sta   SS_Full
+         jsr   TestVBL
+
+         lda   VidType
+         cmp   #1
+         beq   GrfxGR
+         cmp   #2
+         beq   GrfxDGR
+         cmp   #3
+         beq   GrfxHGR
+         cmp   #4
+         beq   GrfxDHGR
+
+GrfxGR   sta   SS_40col
+         sta   SS_Lores
+         sta   SS_DblOff
+         sta   SS_Page2   ; first load is to page 1
+         rts
+
+GrfxDGR  sta   SS_80col
+         sta   SS_Lores
+         sta   SS_DblOn
+         sta   SS_Page2
+         rts
+
+GrfxHGR  sta   SS_40col
+         sta   SS_Hires
+         sta   SS_DblOff
+         sta   SS_Page2   ; first load is to page 1
+         rts
+
+GrfxDHGR sta   SS_80col
+         sta   SS_Hires
+         sta   SS_DblOn
+         sta   SS_Page2
+         rts
+
+
+; ****************************************************************
+; *                       Vertical Blank                         *
+; ****************************************************************
+
+TestVBL  lda   MACHID
+         cmp   #%01000000 ; Do we have a ][+?
+         beq   IIplus     ; ][+ doesn't have VBL signal
+         cmp   #%10001000 ; Do we have a //c?
+         beq   NoVBL      ; //c does VBL signal as interrupt
+
+VBLon    bit   VBL        ; Wait for full vertical blank (every 1/60th sec)
+         bpl   VBLon
+VBLoff   bit   VBL
+         bmi   VBLoff
+
+NoVBL    rts
+
+IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+
+         cmp   #2
+         beq   Exit2
+         cmp   #4
+         beq   Exit2
+         rts
+
+
+; ****************************************************************
+; *                    Control-Reset Handler                     *
+; ****************************************************************
+
+SetReset lda   #<DoReset
+         sta   $3F2
+         lda   #>DoReset
+         sta   $3F3
+         jsr   ROM_Pwrup  ; set checksum
+         rts
+
+DoReset  sta   KeyStrobe
+         jsr   TestGS     ; re-setup //gs border color & speed
+         jsr   Grfx
+         lda   treeidx
+         beq   DoReset1   ; already at the beginning, don't adjust
+         dec   treeidx    ; play last section again
+DoReset1 lda   #0         ; set load to main memory
+         sta   auxreq
+         sta   blkindx    ; clear entries
+         lda   VidSize
+         sta   sizehi
+         jsr   hddrdwrpart
+         bcs   Exit3
+         jmp   Play
+
+Exit3    jmp   Exit
+
+
+; ****************************************************************
+; *                  Emulator-specific Routines                  *
+; ****************************************************************
+
+EmuTest  ldx   #$FF       ; Test floating bus 255 times
+         lda   #0
+         sta   EmuVar     ; zero out count of positive tests
+Emu1     sta   SS_Float   ; tickle Sweet16
+         lda   SS_Float   ; load value from bus
+         cmp   #0         ; Virtual ][? (always returns $00)
+         beq   Emu3
+         cmp   #$16       ; Sweet16? (returns $16 when tickled, $30 otherwise)
+         beq   Emu3
+Emu2     dex              ; keep counting
+         cpx   #0
+         beq   Emu4       ; done with 255 tests yet?
+         jmp   Emu1       ; If not, keep going
+Emu3     inc   EmuVar     ; found potential emulator, increment count
+         jmp   Emu2
+Emu4     lda   EmuVar     ; load counts
+         cmp   #$FF       ; 255 tests of 255 runs positive for emulation?
+         beq   EmuFix     ; if yes, patch the code
+         rts              ; otherwise, just exit cuz we're on "normal" "hardware"
+
+EmuFix   lda   #$4C       ; JMP
+         sta   PageFlip
+         lda   #<EmuWait  ; set branch from normal playback routine
+         sta   PageFlip+1 ; during page flipping operations
+         lda   #>EmuWait  ; (which emulators can't display properly)
+         sta   PageFlip+2 ; to slightly revised EmuWait routine.
+         lda   #5         ; number of times to wait
+         sta   EmuVar     ; playback speed variable
+         rts
+
+EmuWait  ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
+
+EmuVBL   jsr   TestVBL    ; sync next vertical blank period
+         dex
+         bpl   EmuVBL     ; do it till X = zero (remove to EMUWAIT with audio)
+         bit   SS_Page1   ; always show Page 1
+         lda   VidSize
+         sta   ldrhi      ; always load to page 1
+         jmp   ChkKey     ; Resume playback using PLAY after keypress check
+
+
+; ****************************************************************
+; *                    //gs-specific routines                    *
+; ****************************************************************
+
+TestGS   sec
+         jsr   ROM_TestGS ; does RTS on //e, clears carry on //gs
+         bcc   SetGS
+         clc
+         rts              ; not a //gs, just exit
+
+SetGS    lda   #0
+         sta   SS_Border  ; turn border color black
+
+         lda   SS_Speed
+         ora   #%10000000
+         eor   #%10000000
+         sta   SS_Speed   ; sets processor speed to normal
+
+         lda   #$30       ; swap BPL for BMI
+         sta   VBLon+3
+         lda   #$10       ; swap MBI for BPL
+         sta   VBLoff+3   ; //gs reverses VBL
+         rts
+
+
+; ****************************************************************
+; *                           Goodbye!                           *
+; ****************************************************************
+
+Exit     sta   KeyStrobe
+         sta   SS_Main
+         sta   SS_40col
+         sta   SS_DblOff
+
+         jsr   ROM_Text
+         jsr   ROM_Home
+
+         inc   $3F4       ; invalidate reset vector
+         jsr   MLI
+         !byte $65        ; ProDOS QUIT
+         !word ExitParms
+
+ExitParms
+         !byte 4
+         !byte 0
+         !word 0
+         !byte 0
+         !word 0
+
+EndReloc
+}
+
+
+; ****************************************************************
+; *                       Pack In ProRWTS2                       *
+; ****************************************************************
+
+         !source "prorwts2.a"
+
+         !warn "Relocated code is ", EndReloc-Reloc, "bytes. Must be less than $400."
+

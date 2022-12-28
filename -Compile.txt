@@ -1,0 +1,4 @@
+cd /Volumes/TRANSFER/play.vids.system
+acme play.vids.system.a
+cadius DELETEFILE VIDS.hdv /VIDS/BASIS.SYSTEM
+cadius ADDFILE VIDS.hdv /VIDS BASIS.SYSTEM#ff0000
