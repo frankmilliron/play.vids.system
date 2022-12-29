@@ -21,9 +21,9 @@
 
 ; Memory Map:
 ; Player core relocated to $C00-1000 ($400)
-; ProRWTS2 installed to $1000-1100 ($100)
-; ProRWTS block buffer $1100-1300 ($200)
+; ProRWTS2 installed to $1000-1300 ($300)
 ; ProRWTS tree buffer $1300-1500 ($200)
+; ProRWTS block buffer $1700-1900 ($200)
 
 
 
