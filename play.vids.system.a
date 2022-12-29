@@ -26,6 +26,14 @@
 ; ProRWTS tree buffer $1300-1500 ($200)
 
 
+
+; TODO:
+; MAKE PLAYBACK IN ALL MODES WORK
+; Compute file size on load
+; Save //gs speed on load - set slow to play - restore on exit
+; //gs text page 2 fix - detect if Alternate Screen Mode is on
+
+
 !cpu 6502
 !to "BASIS.SYSTEM#ff0000",plain
 !symbollist "BASIS.SYSTEM.list.txt"
@@ -510,8 +518,7 @@ SetGS    lda   #0
          sta   SS_Border  ; turn border color black
 
          lda   SS_Speed
-         ora   #%10000000
-         eor   #%10000000
+         and   #%01111111
          sta   SS_Speed   ; sets processor speed to normal
 
          lda   #$30       ; swap BPL for BMI
