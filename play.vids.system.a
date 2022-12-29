@@ -138,8 +138,13 @@ SetType  lda   C4_Parms+5 ; low byte of aux_type
 ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
 
          sta   SS_Aux
-CopyPro  lda   $1000,y    ; Y set to zero by init
-         sta   $1000,y    ; copy ProRWTS2 to AUX
+         ldy   #0
+CopyPro  lda   $1000,y
+         sta   $1000,y
+         lda   $1100,y
+         sta   $1100,y
+         lda   $1200,y
+         sta   $1200,y    ; copy ProRWTS2 to AUX
          iny
          bne   CopyPro
          sta   SS_Main
@@ -251,17 +256,17 @@ SetupDHGR
 SetupAux jsr   hddopendir
 
          sta   SS_Aux
-CopyTree lda   $1300,x    ; X is set by hddopendir
-         sta   $1300,x
-         lda   $1400,x
-         sta   $1400,x    ; copy ProRWTS2 tree buffer to AUX
+CopyTree lda   $1700,x    ; X is set by hddopendir
+         sta   $1700,x
+         lda   $1800,x
+         sta   $1800,x    ; copy ProRWTS2 tree buffer to AUX
          inx
          bne   CopyTree
 Adjust   sta   SS_Aux
-CopyBlk  lda   $1100,x
-         sta   $1100,x
-         lda   $1200,x
-         sta   $1200,x    ; copy ProRWTS2 block buffer to AUX
+CopyBlk  lda   $1300,x
+         sta   $1300,x
+         lda   $1400,x
+         sta   $1400,x    ; copy ProRWTS2 block buffer to AUX
          inx
          bne   CopyBlk
          beq   Resume

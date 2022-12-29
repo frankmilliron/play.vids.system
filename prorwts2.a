@@ -1,5 +1,6 @@
-; Fork of the ProRWTS2 source - Dec 27, 2022 - FM
-; various user-defined options and 'reloc     = $1000' changed from original
+
+; Dec 27, 2022 - FM
+; various settings and 'reloc     = $1000' only things changed from:
 ; 'fix end detection' commit 56f76d4045ad4c0d7daefa853899535f829bb87a
 ; @peterferrie committed Oct 7, 2022
 ; https://github.com/peterferrie/prorwts2
@@ -24,12 +25,12 @@ ver_02 = 1
 ;place no code before init label below.
 
                 ;user-defined options
-                verbose_info = 0        ;set to 1 to enable display of memory usage
+                verbose_info = 1        ;set to 1 to enable display of memory usage
                 enable_floppy= 0        ;set to 1 to enable floppy drive support
                 poll_drive   = 0        ;set to 1 to check if disk is in drive, recommended if allow_multi is enabled
-                use_smartport= 0        ;set to 1 to enable support for more than two MicroDrive (or more than four CFFA) partitions
+                use_smartport= 1        ;set to 1 to enable support for more than two MicroDrive (or more than four CFFA) partitions
                 override_adr = 1        ;set to 1 to require an explicit load address
-                aligned_read = 1        ;set to 1 if all reads can be a multiple of block size (required for RWTS mode)
+                aligned_read = 0        ;set to 1 if all reads can be a multiple of block size (required for RWTS mode)
                 enable_readseq=1        ;set to 1 to enable reading multiple sequential times from the same file without seek
                                         ;(exposes a fixed address that can be called for either floppy or hard disk support)
                                         ;requires fast_subindex
@@ -73,10 +74,10 @@ ver_02 = 1
                 detect_err   = 0        ;set to 1 to to detect errors in no_interrupts mode
                 swap_zp      = 0        ;set to 1 to include code to preserve zpage
                                         ;used only by RWTS mode
-                swap_scrn    = 0        ;set to 1 to preserve screen hole contents across SmartPort calls
+                swap_scrn    = 1        ;set to 1 to preserve screen hole contents across SmartPort calls
                                         ;recommended if allow_aux is used, to avoid device reset
                                         ;requires 64 bytes to save all holes
-                read_scrn    = 0        ;set to 1 to support reading into screen memory
+                read_scrn    = 1        ;set to 1 to support reading into screen memory
                                         ;requires swap_scrn
                 rwts_mode    = 0        ;set to 1 to enable emulation of DOS RWTS when running from hard disk
                                         ;uses a one-time open of a tree file, no other file access allowed
@@ -91,8 +92,8 @@ ver_02 = 1
                 load_aux     = 0        ;load to aux memory
                 load_banked  = 0        ;set to 1 to load into banked RAM instead of main RAM (can be combined with load_aux for aux banked)
                 lc_bank      = 1        ;load into specified bank (1 or 2) if load_banked=1
-                one_page     = 1        ;set to 1 if verbose mode says that you should (smaller code)
-                two_pages    = 0        ;default size
+                one_page     = 0        ;set to 1 if verbose mode says that you should (smaller code)
+                two_pages    = 1        ;default size
                 three_pages  = 0        ;set to 1 if verbose mode says that you should (code is larger than two pages)
 
                 ;user-defined driver load address
@@ -500,13 +501,8 @@ slot            ldx     $cfff
 +               jmp     bankram
 ++
   } else { ;enable_floppy = 0
-    !if rwts_mode = 0 {
-                bcc     bankram
-    } else { ;rwts_mode = 1
                 bcs     +
                 jmp     bankram
-+
-    } ;rwts_mode = 0
   } ;enable_floppy = 1
 
                 ldy     #$8c ;STY
@@ -538,8 +534,8 @@ slot            ldx     $cfff
                 sty     unrcommand2
   } ;rwts_mode = 0 and aligned_read = 0 and enable_write = 1
                 sty     unrbloklo1
-                ;;lda     #>pblock
-                ;;pblock_enabled=1
+                lda     #>pblock
+                pblock_enabled=1
                 sta     unrbloklo1 + 2
   !if (rwts_mode + write_sparse) > 1 {
                 sta     unrbloklo2 + 2
@@ -551,7 +547,7 @@ slot            ldx     $cfff
                 sta     unrblokhi2 + 2
                 sta     unrblokhi3 + 2
   } ;rwts_mode = 1 and write_sparse = 1
-                ;;lda     #>paddr
+                lda     #>paddr
                 sta     unrunit1 + 4
                 ldy     #<pblock
                 sty     unrbloklo1 + 1
@@ -2994,7 +2990,7 @@ hddcopyblock
       !if allow_aux = 0 {
                 rts
       } else { ;allow_aux = 1
-                beq     hddrdwrdone
+                jmp     hddrdwrdone
       } ;allow_aux = 0
     } ;one_shot = 0
   } else { ;aligned_read = 1
@@ -3355,10 +3351,12 @@ resumescrn
   } ;aligned_read = 0
                 dec     sizehi
                 dec     sizehi
-                bne     hddrdwrloop
+                bne     ++
   !if aligned_read = 0 {
+                clc
                 lda     sizelo
-                bne     hddrdwrloop
+                beq     hddrdwrdone
+++              jmp     hddrdwrloop
   } ;aligned_read = 0
 hddrdwrdone
   !if allow_aux = 1 {
@@ -3366,6 +3364,7 @@ hddrdwrdone
 hddsetaux       sta     CLRAUXRD, x
                 sta     CLRAUXWR, x
   } ;allow_aux = 1
+knownrts
                 rts
 } ;rwts_mode = 0
 
