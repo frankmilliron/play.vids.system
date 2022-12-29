@@ -35,8 +35,8 @@
 
 
 !cpu 6502
-!to "BASIS.SYSTEM#ff0000",plain
-!symbollist "BASIS.SYSTEM.list.txt"
+!to "build/BASIS.SYSTEM#ff0000",plain
+!symbollist "build/BASIS.SYSTEM.list.txt"
 
 *=$2000
 

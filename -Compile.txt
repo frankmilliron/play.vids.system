@@ -1,4 +1,5 @@
-cd /Volumes/TRANSFER/play.vids.system
+cd /Users/Frank/Documents/GitHub/play.vids.system/
 acme play.vids.system.a
+cd build
 cadius DELETEFILE VIDS.hdv /VIDS/BASIS.SYSTEM
 cadius ADDFILE VIDS.hdv /VIDS BASIS.SYSTEM#ff0000
