@@ -29,7 +29,7 @@
 
 ; TODO:
 ; MAKE PLAYBACK IN ALL MODES WORK
-; Compute file size on load
+; Compute file size on load (EOF tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
 
