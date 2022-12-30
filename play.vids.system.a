@@ -1,4 +1,4 @@
-
+x
 ; play.vids.system.a
 
 ; Play video files in all graphics modes
@@ -77,7 +77,6 @@ SS_Hires       = $C057    ; turn on hires graphics
 SS_DblOn       = $C05E    ; turn on double graphics modes
 SS_DblOff      = $C05F    ; turn off double graphics modes
 
-ROM_HClr       = $F3F2    ; clear hires screen
 ROM_Home       = $FC58    ; clear text screen 1
 ROM_Text       = $FB2F    ; exit graphics mode
 ROM_Pwrup      = $FB6F    ; set reset vector checksum
@@ -152,7 +151,7 @@ ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
          sta   namlo
 
          ldx   #1         ; cmdread
-         ;stx   reqcmd
+         stx   reqcmd
          ;stx   auxreq     ; double image formats load into AUX memory first
 
          dex 
@@ -194,10 +193,10 @@ C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
 Relocated
 !pseudopc Reloc {
 
-         ;jsr   EmuTest
+         jsr   EmuTest
          jsr   TestGS
          jsr   SetReset
-         ;jsr   TestVBL    ; wait until v blank to change modes
+         jsr   TestVBL    ; wait until v blank to change modes
 
          lda   VidType    ; jump table?
          cmp   #1
@@ -345,9 +344,9 @@ Resume   lda   #1         ; load second part in aux
 
 PageFlip jsr   Grfx       ; don't show graphics mode until we've loaded a frame
          bit   SS_Page2   ; start showing page 2  **self-modified
-         lda   PageFlip+1
+         lda   PageFlip+4
          eor   #1         ; flip between showing page 1 & 2
-         sta   PageFlip+1
+         sta   PageFlip+4
 
          lda   ldrhi
          eor   LoadEOR    ; flip between loading to page 1 & 2
@@ -538,11 +537,11 @@ Emu4     lda   EmuVar     ; load counts
          rts              ; otherwise, just exit cuz we're on "normal" "hardware"
 
 EmuFix   lda   #$4C       ; JMP
-         sta   PageFlip
+         sta   PageFlip+3
          lda   #<EmuWait  ; set branch from normal playback routine
-         sta   PageFlip+1 ; during page flipping operations
+         sta   PageFlip+4 ; during page flipping operations
          lda   #>EmuWait  ; (which emulators can't display properly)
-         sta   PageFlip+2 ; to slightly revised EmuWait routine.
+         sta   PageFlip+5 ; to slightly revised EmuWait routine.
          lda   #5         ; number of times to wait
          sta   EmuVar     ; playback speed variable
          rts
@@ -600,9 +599,9 @@ Exit     sta   KeyStrobe
          !word ExitParms
 
 ExitParms
-         !byte 4
+         !byte 4          ; 4 parameters
          !byte 0
-         !word 0
+         !word 0          ; none used
          !byte 0
          !word 0
 
