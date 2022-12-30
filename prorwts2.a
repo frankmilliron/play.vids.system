@@ -1,6 +1,6 @@
 
-; Dec 28, 2022 - FM
-; various things changed from original source below
+; Dec 29, 2022 - FM
+; forked from below with some tweaks by qkumba
 
 ; 'fix end detection' commit 56f76d4045ad4c0d7daefa853899535f829bb87a
 ; @peterferrie committed Oct 7, 2022

@@ -6,7 +6,7 @@
 ; (c) 2022 by Frank Milliron, Lombard $oftware
 ; https://github.com/frankmilliron/play.vids.system
 
-; ProRWTS2 by Peter Ferrie AKA qkumba
+; Includes ProRWTS2 by Peter Ferrie AKA qkumba
 ; https://github.com/peterferrie/prorwts2
 
 ; "acme play.vids.system.a" to assemble
@@ -35,8 +35,10 @@
 
 
 !cpu 6502
-!to "build/BASIS.SYSTEM#ff0000",plain
-!symbollist "build/BASIS.SYSTEM.list.txt"
+!to "BASIS.SYSTEM#ff0000",plain
+!symbollist "BASIS.SYSTEM.list.txt"
+;!to "build/BASIS.SYSTEM#ff0000",plain
+;!symbollist "build/BASIS.SYSTEM.list.txt"
 
 *=$2000
 
@@ -47,7 +49,7 @@
 
 EmuVar         = $76      ; used for emulator test & playback
 HGR_Page       = $77      ; used by ROM graphics clear routine
-LoadEOR        = $78      ; $400 <--> $800 or $2000 <--> $4000
+LoadEOR        = $78      ; switch between loading to page 1 or 2
 VidType        = $79      ; picked up from GET_FILE_ATTRIBUTES
 VidSize        = $7A      ; set based on video type
 
@@ -102,8 +104,9 @@ hddrdwrpart    = $1000    ; read part of file
 ; When a file is selected, ProDOS launches /VOL/BASIS.SYSTEM with:
 ; 1) The ProDOS prefix set to the directory containing the selected file
 ; 2) The filename of the selected file stored at $2006
-; 3) $280 is set to the name of the root volume
+; 3) $280 is set to the name of the root volume (Bitsy Bye only)
 ; 4) $380 is set to the name of the launched SYS file (ie, /VOL/BASIS.SYSTEM)
+; NOTE: Bitsy Bye may leave some of the paths lowercased and high bits set (!)
 
          jmp   Start
 
@@ -112,13 +115,16 @@ hddrdwrpart    = $1000    ; read part of file
          !fill 65,0       ; prodos full path buffer
 
 Start    sta   KeyStrobe  ; clear stray keypresses
-         jsr   ROM_Home
+         ;jsr   ROM_Home
 
 MoveFilename              ; (should be at address $2047 here)
-         ldy   #$41       ; copy filename from $2006 to $300
+         ldy   #$41       ; copy filename from $2006 to $300 --could pickup length from buffer
 -        lda   $2006,y
-         ;and   #$DF       ; convert name to uppercase ?????
-         sta   VidName,y
+         and   #$7F       ; strip high bit
+         cmp   #$60       ; in lowercase range?
+         bcc   ++         ; no, leave it alone
+         and   #$DF       ; yes, make uppercase
+++       sta   VidName,y
          dey
          bpl   -
 
@@ -127,38 +133,31 @@ GetAttributes
          !byte $C4        ; get file attributes
          !word C4_Parms
 
-         lda   C4_Parms+4 ; file_type
-         cmp   #$5B       ; must be $5B (ANM) "Animation"
+         lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
+         cmp   #$5B
+         beq   AuxType
+         jmp   Exit+Reloc ; we haven't relocated yet
+AuxType  lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
+         cmp   #$10
          beq   SetType
          jmp   Exit+Reloc ; we haven't relocated yet
-
-SetType  lda   C4_Parms+5 ; low byte of aux_type
+SetType  lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
          sta   VidType
 
 ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
 
-         sta   SS_Aux
-         ldy   #0
-CopyPro  lda   $1000,y
-         sta   $1000,y
-         lda   $1100,y
-         sta   $1100,y
-         lda   $1200,y
-         sta   $1200,y    ; copy ProRWTS2 to AUX
-         iny
-         bne   CopyPro
-         sta   SS_Main
-
-         lda   #>VidName
+         lda   #>VidName  ; set filename
          sta   namhi
          lda   #<VidName
          sta   namlo
-         lda   #1         ; cmdread
-         sta   reqcmd
-         lda   #0
-         sta   ldrlo
-         sta   sizelo
-         sta   auxreq
+
+         ldx   #1         ; cmdread
+         ;stx   reqcmd
+         ;stx   auxreq     ; double image formats load into AUX memory first
+
+         dex 
+         stx   ldrlo
+         stx   sizelo
 
 RelocPlayer
          ldy   #0         ; total < $400 bytes
@@ -195,11 +194,12 @@ C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
 Relocated
 !pseudopc Reloc {
 
-         jsr   EmuTest
+         ;jsr   EmuTest
          jsr   TestGS
          jsr   SetReset
+         ;jsr   TestVBL    ; wait until v blank to change modes
 
-         lda   VidType
+         lda   VidType    ; jump table?
          cmp   #1
          beq   SetupGR
          cmp   #2
@@ -211,49 +211,65 @@ Relocated
          jmp   Exit
 
 SetupGR
-         lda   #$04       ; $400
+         lda   #$04       ; $400 bytes at $400
          sta   VidSize
-         sta   sizehi     ; can't open file for read without these
+         sta   sizehi
+         lda   #$08       ; first load to page 2
          sta   ldrhi
          lda   #$0C
-         sta   LoadEOR    ; change load between $400 and $800
+         sta   LoadEOR    ; swap ldrhi between $400 & $800
          jsr   hddopendir
-         jsr   Grfx
+         ;jsr   Grfx
          jmp   Play
 
 SetupDGR
-         lda   #$04
+         lda   #$04       ; $400 bytes at $400, two times per frame, AUX then Main
          sta   VidSize
-         sta   sizehi     
+         sta   sizehi
+         lda   #$40       ; first load to page 2 
          sta   ldrhi
-         lda   #$0C
+         lda   #$0C       ; swap ldrhi between $400 & $800
          sta   LoadEOR
-         jsr   Grfx
+         ;jsr   Grfx
          jmp   SetupAux
 
 SetupHGR
          lda   #$20
-         sta   VidSize    ; $2000
+         sta   VidSize    ; $2000 bytes at $2000
          sta   sizehi
+         lda   #$40       ; first load to page 2
          sta   ldrhi
          lda   #$60
-         sta   LoadEOR    ; change load between $2000 and $4000
+         sta   LoadEOR    ; swap ldrhi between $2000 & $4000
          jsr   hddopendir
-         jsr   Grfx
+         ;jsr   Grfx
          jmp   Play
 
 SetupDHGR
          lda   #$20
-         sta   VidSize
+         sta   VidSize    ; $2000 bytes at $2000, two times per frame, AUX then Main
          sta   sizehi
+         lda   #$40       ; first load to page 2
          sta   ldrhi
          lda   #$10
-         sta   BlkIndex+1 ; has to be larger for DHGR ??
+         sta   BlkIndex+1 ; has to be larger for DHGR ???
          lda   #$60
          sta   LoadEOR
-         jsr   Grfx       ; fall through
+         ;jsr   Grfx       ; fall through
 
-SetupAux jsr   hddopendir
+SetupAux sta   SS_Aux
+         ldy   #0
+CopyPro  lda   $1000,y    ; copy ProRWTS2 to AUX
+         sta   $1000,y
+         lda   $1100,y
+         sta   $1100,y
+         lda   $1200,y
+         sta   $1200,y
+         iny
+         bne   CopyPro
+         sta   SS_Main
+
+         jsr   hddopendir
 
          sta   SS_Aux
 CopyTree lda   $1700,x    ; X is set by hddopendir
@@ -269,14 +285,16 @@ CopyBlk  lda   $1300,x
          sta   $1400,x    ; copy ProRWTS2 block buffer to AUX
          inx
          bne   CopyBlk
-         beq   Resume
+         beq   Resume ;Single
 
 
 ; ****************************************************************
 ; *                    Main Playback Routine                     *
 ; ****************************************************************
 
-Play     lda   #0
+Play sta   SS_Main
+
+     lda   #0
          sta   auxreq     ; main mem
          lda   VidSize    ; changed based on file attributes
          sta   sizehi     ; on each load
@@ -285,7 +303,7 @@ Play     lda   #0
 
          lda   VidType    ; single-res modes done
          cmp   #1
-         beq   PageFlip
+         beq   PageFlip   ; single-res modes to main memory only
          cmp   #3
          beq   PageFlip
 
@@ -295,17 +313,44 @@ BlkIndex cmp   #2         ; watch for 64kb wrap-around
 Resume   lda   #1         ; load second part in aux
          sta   auxreq
          lda   VidSize
-         sta   sizehi
+         sta   sizehi     ; refresh on each load
          jsr   hddrdwrpart
          bcs   Exit1
 
-PageFlip bit   SS_Page1
+
+;Play     lda   VidType
+;         cmp   #1
+;         beq   Single
+;         cmp   #3
+;         beq   Single
+
+;Double   lda   #1    
+;         sta   auxreq     ; first half of frame loaded to aux first
+;         lda   VidSize
+;         sta   sizehi     ; refresh on each load
+;         jsr   hddrdwrpart
+;         bcs   Exit1      ; quit at end of file
+;         lda   blkindx
+;BlkIndex cmp   #2         ; watch for 64kb wrap-around
+;         beq   Adjust
+
+;Single   lda   #0
+;         sta   auxreq     ; single modes main only
+;         lda   VidSize
+;         sta   sizehi
+;         jsr   hddrdwrpart
+;         bcs   Exit1
+
+
+
+PageFlip jsr   Grfx       ; don't show graphics mode until we've loaded a frame
+         bit   SS_Page2   ; start showing page 2  **self-modified
          lda   PageFlip+1
-         eor   #1         ; flip between showing page 1 and 2
+         eor   #1         ; flip between showing page 1 & 2
          sta   PageFlip+1
 
          lda   ldrhi
-         eor   LoadEOR    ; flip between loading to page 1 and 2
+         eor   LoadEOR    ; flip between loading to page 1 & 2
          sta   ldrhi
 
 ChkKey   lda   Keyboard
@@ -318,6 +363,9 @@ Exit1    jmp   Exit
 ; ****************************************************************
 ; *                       Keypress Handler                       *
 ; ****************************************************************
+
+;TODO double modes increment 2 for ff/rew?
+
 
 Key      sta   KeyStrobe
 
@@ -336,8 +384,8 @@ FastFor  cmp   #$95       ; right arrow key pressed? ($15+80)
          inc   treeidx
          jmp   DoReset1
 
-Pause    cmp   #$A0       ; space Bar pressed? ($20+80)
-         bne   Single
+Pause    cmp   #$A0       ; space bar pressed? ($20+80)
+         bne   OneKey
 Pause1   lda   Keyboard
          bpl   Pause1     ; test for second keypress
          cmp   #$9B       ; escape key pressed? ($1B+80)
@@ -349,12 +397,12 @@ Pause1   lda   Keyboard
 Pause2   bit   KeyStrobe
          jmp   Play
 
-Single   cmp   #$B1       ; "1" key pressed? ($31+80)
-         bne   Double
+OneKey   cmp   #$B1       ; "1" key pressed? ($31+80)
+         bne   TwoKey
          bit   SS_DblOff  ; turn off double graphics mode
          jmp   Play
 
-Double   cmp   #$B2       ; "2" key pressed? ($32+80)
+TwoKey   cmp   #$B2       ; "2" key pressed? ($32+80)
          bne   Esc
          bit   SS_DblOn   ; turn on double graphics mode
          jmp   Play
@@ -370,12 +418,13 @@ Exit2    jmp   Exit
 ; *                     Setup Graphics Modes                     *
 ; ****************************************************************
 
-Grfx     sta   KeyStrobe  ; Clear keyboard strobe
-         sta   SS_Grfx
-         sta   SS_Full
-         jsr   TestVBL
+Grfx     lda   #$2C      ; BIT
+         sta   PageFlip  ; only need this once
 
-         lda   VidType
+sta   SS_Grfx
+         sta   SS_Full
+
+         lda   VidType    ; jump table???
          cmp   #1
          beq   GrfxGR
          cmp   #2
@@ -388,25 +437,25 @@ Grfx     sta   KeyStrobe  ; Clear keyboard strobe
 GrfxGR   sta   SS_40col
          sta   SS_Lores
          sta   SS_DblOff
-         sta   SS_Page2   ; first load is to page 1
+         ;sta   SS_Page1   ; first load is to page 2
          rts
 
 GrfxDGR  sta   SS_80col
          sta   SS_Lores
          sta   SS_DblOn
-         sta   SS_Page2
+         ;sta   SS_Page1
          rts
 
 GrfxHGR  sta   SS_40col
          sta   SS_Hires
          sta   SS_DblOff
-         sta   SS_Page2   ; first load is to page 1
+         ;sta   SS_Page1
          rts
 
 GrfxDHGR sta   SS_80col
          sta   SS_Hires
          sta   SS_DblOn
-         sta   SS_Page2
+         ;sta   SS_Page1
          rts
 
 
@@ -520,16 +569,16 @@ TestGS   sec
          rts              ; not a //gs, just exit
 
 SetGS    lda   #0
-         sta   SS_Border  ; turn border color black
+         sta   SS_Border  ; turn border color black - store/restore?
 
          lda   SS_Speed
          and   #%01111111
-         sta   SS_Speed   ; sets processor speed to normal
+         sta   SS_Speed   ; sets processor speed to normal  - store/restore?
 
-         lda   #$30       ; swap BPL for BMI
-         sta   VBLon+3
-         lda   #$10       ; swap MBI for BPL
-         sta   VBLoff+3   ; //gs reverses VBL
+         lda   #$30       ; //gs reverses VBL, so
+         sta   VBLon+3    ; swap BPL for BMI
+         lda   #$10
+         sta   VBLoff+3   ; swap BMI for BPL
          rts
 
 
