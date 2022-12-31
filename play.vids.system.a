@@ -30,8 +30,9 @@ x
 
 
 ; TODO:
-; MAKE PLAYBACK IN ALL MODES WORK ON ALL MACHINES
+; MAKE PLAYBACK WORK IN ALL MODES WORK ON ALL MACHINES
 ; switch double-size loading to aux, then main
+; load lores and double-lores file natively (avoid screen holes)
 ; Compute file size on load (EOF tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
