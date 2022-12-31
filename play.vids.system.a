@@ -17,6 +17,8 @@ x
 ; #2 - file_type $5B (ANM) - aux_type $1002 = DGR mode playback
 ; #3 - file_type $5B (ANM) - aux_type $1003 = HGR mode playback
 ; #4 - file_type $5B (ANM) - aux_type $1004 = DHGR mode playback
+; #5 - file_type $5B (ANM) - aux_type $1005 = 40-col text mode
+; #6 - file_type $5B (ANM) - aux_type $1006 = 80-col text mode
 ;  * ANM "Animation"
 
 ; Memory Map:
@@ -28,10 +30,12 @@ x
 
 
 ; TODO:
-; MAKE PLAYBACK IN ALL MODES WORK
+; MAKE PLAYBACK IN ALL MODES WORK ON ALL MACHINES
+; switch double-size loading to aux, then main
 ; Compute file size on load (EOF tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
+; text mode ascii animation?
 
 
 !cpu 6502
@@ -193,7 +197,7 @@ C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
 Relocated
 !pseudopc Reloc {
 
-         jsr   EmuTest
+         ;jsr   EmuTest
          jsr   TestGS
          jsr   SetReset
          jsr   TestVBL    ; wait until v blank to change modes
@@ -218,18 +222,16 @@ SetupGR
          lda   #$0C
          sta   LoadEOR    ; swap ldrhi between $400 & $800
          jsr   hddopendir
-         ;jsr   Grfx
          jmp   Play
 
 SetupDGR
          lda   #$04       ; $400 bytes at $400, two times per frame, AUX then Main
          sta   VidSize
          sta   sizehi
-         lda   #$40       ; first load to page 2 
+         lda   #$08       ; first load to page 2 
          sta   ldrhi
          lda   #$0C       ; swap ldrhi between $400 & $800
          sta   LoadEOR
-         ;jsr   Grfx
          jmp   SetupAux
 
 SetupHGR
@@ -241,7 +243,6 @@ SetupHGR
          lda   #$60
          sta   LoadEOR    ; swap ldrhi between $2000 & $4000
          jsr   hddopendir
-         ;jsr   Grfx
          jmp   Play
 
 SetupDHGR
@@ -253,8 +254,7 @@ SetupDHGR
          lda   #$10
          sta   BlkIndex+1 ; has to be larger for DHGR ???
          lda   #$60
-         sta   LoadEOR
-         ;jsr   Grfx       ; fall through
+         sta   LoadEOR    ; fall through
 
 SetupAux sta   SS_Aux
          ldy   #0
@@ -291,58 +291,38 @@ CopyBlk  lda   $1300,x
 ; *                    Main Playback Routine                     *
 ; ****************************************************************
 
-Play sta   SS_Main
 
-     lda   #0
-         sta   auxreq     ; main mem
-         lda   VidSize    ; changed based on file attributes
-         sta   sizehi     ; on each load
+Play     lda   VidType    ; single or double load?
+         cmp   #1
+         beq   Single
+         cmp   #3
+         beq   Single
+
+Double   lda   #1    
+         sta   auxreq     ; first half of frame loaded to aux first
+         lda   VidSize
+         sta   sizehi     ; refresh on each load
          jsr   hddrdwrpart
          bcs   Exit1      ; quit at end of file
-
-         lda   VidType    ; single-res modes done
-         cmp   #1
-         beq   PageFlip   ; single-res modes to main memory only
-         cmp   #3
-         beq   PageFlip
-
          lda   blkindx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
          beq   Adjust
-Resume   lda   #1         ; load second part in aux
+Resume   lda   #0         ; load second part in main
          sta   auxreq
          lda   VidSize
          sta   sizehi     ; refresh on each load
          jsr   hddrdwrpart
          bcs   Exit1
+         bcc   PageFlip
 
+Single   lda   #0
+         sta   auxreq     ; single modes main only
+         lda   VidSize
+         sta   sizehi
+         jsr   hddrdwrpart
+         bcs   Exit1
 
-;Play     lda   VidType
-;         cmp   #1
-;         beq   Single
-;         cmp   #3
-;         beq   Single
-
-;Double   lda   #1    
-;         sta   auxreq     ; first half of frame loaded to aux first
-;         lda   VidSize
-;         sta   sizehi     ; refresh on each load
-;         jsr   hddrdwrpart
-;         bcs   Exit1      ; quit at end of file
-;         lda   blkindx
-;BlkIndex cmp   #2         ; watch for 64kb wrap-around
-;         beq   Adjust
-
-;Single   lda   #0
-;         sta   auxreq     ; single modes main only
-;         lda   VidSize
-;         sta   sizehi
-;         jsr   hddrdwrpart
-;         bcs   Exit1
-
-
-
-PageFlip jsr   Grfx       ; don't show graphics mode until we've loaded a frame
+PageFlip jsr   Grfx       ; load frame before switching to graphics  **self-modified
          bit   SS_Page2   ; start showing page 2  **self-modified
          lda   PageFlip+4
          eor   #1         ; flip between showing page 1 & 2
@@ -414,16 +394,16 @@ Exit2    jmp   Exit
 
 
 ; ****************************************************************
-; *                     Setup Graphics Modes                     *
+; *                    Turn on Graphics Modes                    *
 ; ****************************************************************
 
-Grfx     lda   #$2C      ; BIT
-         sta   PageFlip  ; only need this once
+Grfx     lda   #$2C       ; BIT
+         sta   PageFlip   ; only need to call once
 
-sta   SS_Grfx
+         sta   SS_Grfx
          sta   SS_Full
 
-         lda   VidType    ; jump table???
+         lda   VidType    ; jump table instead???
          cmp   #1
          beq   GrfxGR
          cmp   #2
@@ -436,25 +416,21 @@ sta   SS_Grfx
 GrfxGR   sta   SS_40col
          sta   SS_Lores
          sta   SS_DblOff
-         ;sta   SS_Page1   ; first load is to page 2
          rts
 
 GrfxDGR  sta   SS_80col
          sta   SS_Lores
          sta   SS_DblOn
-         ;sta   SS_Page1
          rts
 
 GrfxHGR  sta   SS_40col
          sta   SS_Hires
          sta   SS_DblOff
-         ;sta   SS_Page1
          rts
 
 GrfxDHGR sta   SS_80col
          sta   SS_Hires
          sta   SS_DblOn
-         ;sta   SS_Page1
          rts
 
 
@@ -546,15 +522,20 @@ EmuFix   lda   #$4C       ; JMP
          sta   EmuVar     ; playback speed variable
          rts
 
-EmuWait  ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
+EmuWait  ;ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
+     bit   SS_Page1
+         sta $c030
+         sta $c030
+         jmp   ChkKey
 
-EmuVBL   jsr   TestVBL    ; sync next vertical blank period
-         dex
-         bpl   EmuVBL     ; do it till X = zero (remove to EMUWAIT with audio)
-         bit   SS_Page1   ; always show Page 1
-         lda   VidSize
-         sta   ldrhi      ; always load to page 1
-         jmp   ChkKey     ; Resume playback using PLAY after keypress check
+;EmuVBL   jsr   TestVBL    ; sync next vertical blank period
+;         dex
+;         bpl   EmuVBL     ; do it till X = zero (remove to EMUWAIT with audio)
+;         bit   SS_Page1   ; always show Page 1
+;         
+;         lda   VidSize
+;         sta   ldrhi      ; always load to page 1
+;         jmp   ChkKey     ; Resume playback using PLAY after keypress check
 
 
 ; ****************************************************************
@@ -574,11 +555,29 @@ SetGS    lda   #0
          and   #%01111111
          sta   SS_Speed   ; sets processor speed to normal  - store/restore?
 
-         lda   #$30       ; //gs reverses VBL, so
-         sta   VBLon+3    ; swap BPL for BMI
-         lda   #$10
-         sta   VBLoff+3   ; swap BMI for BPL
-         rts
+TestADM  tya              ; GS ID routine returns with ROM version in Y
+         cpy   #0         ; ROM 0?
+         beq   +
+         cmy   #1         ; ROM 1?
+         beq   +
+         lda   #$20
+         sta   $0800      ; Alternate Display Mode already on?
+         lda   #$FF
+         jsr   ROM_Wait   ; skip a VBL cycle
+!cpu 65816
+         lda   $E00800    ; If yes, we shadow copied to bank $E0
+         cmp   #$20
+         beq   +          ; only call TEXT2COPY if we know it's off
+!cpu 6502                 ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
++        jsr   ROM_Text2Copy         ; set Alternate Display Mode on IIgs
+;+
+++       rts
+
+
+;         lda   #$30       ; //gs reverses VBL, so
+;         sta   VBLon+3    ; swap BPL for BMI
+;         lda   #$10
+;         sta   VBLoff+3   ; swap BMI for BPL
 
 
 ; ****************************************************************
