@@ -21,12 +21,13 @@ x
 ; #6 - file_type $5B (ANM) - aux_type $1006 = 80-col text mode
 ;  * ANM "Animation"
 
+
 ; Memory Map:
 ; Player core relocated to $C00-1000 ($400)
 ; ProRWTS2 installed to $1000-1300 ($300)
 ; ProRWTS tree buffer $1300-1500 ($200)
 ; ProRWTS block buffer $1700-1900 ($200)
-
+; Video loaded directly to video buffers at $400/$800 & $2000/$4000
 
 
 ; TODO:
@@ -37,6 +38,8 @@ x
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
 ; text mode ascii animation?
+
+
 
 
 !cpu 6502
