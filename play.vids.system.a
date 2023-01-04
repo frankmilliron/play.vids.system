@@ -31,12 +31,13 @@ x
 
 
 ; TODO:
-; MAKE PLAYBACK WORK IN ALL MODES WORK ON ALL MACHINES
-; switch double-size loading to aux, then main
-; load lores and double-lores file natively (avoid screen holes)
+; MAKE PLAYBACK WORK IN ALL MODES, ON ALL MACHINES, WITH ALL MASS STORAGE
+; load lores and double-lores file natively (use b2d output, avoid screen holes)
+;   "scanline oriented single file"
 ; Compute file size on load (EOF tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
+; hangs on ][+ waiting for VBL
 ; text mode ascii animation?
 
 
@@ -85,9 +86,11 @@ SS_Hires       = $C057    ; turn on hires graphics
 SS_DblOn       = $C05E    ; turn on double graphics modes
 SS_DblOff      = $C05F    ; turn off double graphics modes
 
+ROM_Text2Copy  = $F962    ; turn on alternate display mode on //gs
 ROM_Home       = $FC58    ; clear text screen 1
 ROM_Text       = $FB2F    ; exit graphics mode
 ROM_Pwrup      = $FB6F    ; set reset vector checksum
+ROM_Wait       = $FCA8    ; not critical, only used for VBL check on //gs
 ROM_TestGS     = $FE1F    ; test for //gs
 
 ;ProRWTS2-specific:
@@ -115,17 +118,17 @@ hddrdwrpart    = $1000    ; read part of file
 ; 4) $380 is set to the name of the launched SYS file (ie, /VOL/BASIS.SYSTEM)
 ; NOTE: Bitsy Bye may leave some of the paths lowercased and high bits set (!)
 
-         jmp   Start
+         jmp   BASIS
 
          !hex  EE EE      ; signifies launchable prodos file
          !byte $41        ; prodos path buffer length (65 bytes)
          !fill 65,0       ; prodos full path buffer
 
-Start    sta   KeyStrobe  ; clear stray keypresses
-         ;jsr   ROM_Home
+BASIS                     ; *=$2047
+         sta   KeyStrobe  ; clear stray keypresses
 
-MoveFilename              ; (should be at address $2047 here)
-         ldy   #$41       ; copy filename from $2006 to $300 --could pickup length from buffer
+MoveFilename
+         ldy   $2006      ; copy filename from BASIS buffer
 -        lda   $2006,y
          and   #$7F       ; strip high bit
          cmp   #$60       ; in lowercase range?
@@ -160,8 +163,6 @@ ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
 
          ldx   #1         ; cmdread
          stx   reqcmd
-         ;stx   auxreq     ; double image formats load into AUX memory first
-
          dex 
          stx   ldrlo
          stx   sizelo
@@ -201,7 +202,6 @@ C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
 Relocated
 !pseudopc Reloc {
 
-         ;jsr   EmuTest
          jsr   TestGS
          jsr   SetReset
          jsr   TestVBL    ; wait until v blank to change modes
@@ -225,6 +225,7 @@ SetupGR
          sta   ldrhi
          lda   #$0C
          sta   LoadEOR    ; swap ldrhi between $400 & $800
+         jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
@@ -246,6 +247,7 @@ SetupHGR
          sta   ldrhi
          lda   #$60
          sta   LoadEOR    ; swap ldrhi between $2000 & $4000
+         jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
@@ -260,7 +262,8 @@ SetupDHGR
          lda   #$60
          sta   LoadEOR    ; fall through
 
-SetupAux sta   SS_Aux
+SetupAux jsr   EmuTest
+         sta   SS_Aux
          ldy   #0
 CopyPro  lda   $1000,y    ; copy ProRWTS2 to AUX
          sta   $1000,y
@@ -272,7 +275,7 @@ CopyPro  lda   $1000,y    ; copy ProRWTS2 to AUX
          bne   CopyPro
          sta   SS_Main
 
-         jsr   hddopendir
+;SetupAux jsr   hddopendir
 
          sta   SS_Aux
 CopyTree lda   $1700,x    ; X is set by hddopendir
@@ -307,7 +310,7 @@ Double   lda   #1
          lda   VidSize
          sta   sizehi     ; refresh on each load
          jsr   hddrdwrpart
-         bcs   Exit1      ; quit at end of file
+         bcs   Exit1      ; quit at end of file  <----Fix
          lda   blkindx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
          beq   Adjust
@@ -317,7 +320,7 @@ Resume   lda   #0         ; load second part in main
          sta   sizehi     ; refresh on each load
          jsr   hddrdwrpart
          bcs   Exit1
-         bcc   PageFlip
+         bcc   SetGrfx
 
 Single   lda   #0
          sta   auxreq     ; single modes main only
@@ -326,11 +329,11 @@ Single   lda   #0
          jsr   hddrdwrpart
          bcs   Exit1
 
-PageFlip jsr   Grfx       ; load frame before switching to graphics  **self-modified
-         bit   SS_Page2   ; start showing page 2  **self-modified
-         lda   PageFlip+4
+SetGrfx  jsr   Grfx       ; page loaded, switch graphics modes  **self-modified
+PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
+         lda   PageFlip+1
          eor   #1         ; flip between showing page 1 & 2
-         sta   PageFlip+4
+         sta   PageFlip+1
 
          lda   ldrhi
          eor   LoadEOR    ; flip between loading to page 1 & 2
@@ -402,7 +405,7 @@ Exit2    jmp   Exit
 ; ****************************************************************
 
 Grfx     lda   #$2C       ; BIT
-         sta   PageFlip   ; only need to call once
+         sta   SetGrfx    ; only need to call once
 
          sta   SS_Grfx
          sta   SS_Full
@@ -444,9 +447,9 @@ GrfxDHGR sta   SS_80col
 
 TestVBL  lda   MACHID
          cmp   #%01000000 ; Do we have a ][+?
-         beq   IIplus     ; ][+ doesn't have VBL signal
+         beq   IIplus     ; ][+ doesn't have VBL --- floating bus??
          cmp   #%10001000 ; Do we have a //c?
-         beq   NoVBL      ; //c does VBL signal as interrupt
+         beq   NoVBL      ; //c does VBL as interrupt
 
 VBLon    bit   VBL        ; Wait for full vertical blank (every 1/60th sec)
          bpl   VBLon
@@ -455,7 +458,7 @@ VBLoff   bit   VBL
 
 NoVBL    rts
 
-IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+
+IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+   --message?
          cmp   #2
          beq   Exit2
          cmp   #4
@@ -517,29 +520,29 @@ Emu4     lda   EmuVar     ; load counts
          rts              ; otherwise, just exit cuz we're on "normal" "hardware"
 
 EmuFix   lda   #$4C       ; JMP
-         sta   PageFlip+3
+         sta   PageFlip
          lda   #<EmuWait  ; set branch from normal playback routine
-         sta   PageFlip+4 ; during page flipping operations
+         sta   PageFlip+1 ; during page flipping operations
          lda   #>EmuWait  ; (which emulators can't display properly)
-         sta   PageFlip+5 ; to slightly revised EmuWait routine.
-         lda   #5         ; number of times to wait
-         sta   EmuVar     ; playback speed variable
+         sta   PageFlip+2 ; to slightly revised EmuWait routine
+
+         lda   VidSize    ; first load to page 1
+         sta   ldrhi
+
+         lda   #5         ; number of VBL to wait
+         sta   EmuVar
+
          rts
 
-EmuWait  ;ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
-     bit   SS_Page1
-         sta $c030
-         sta $c030
-         jmp   ChkKey
-
-;EmuVBL   jsr   TestVBL    ; sync next vertical blank period
-;         dex
-;         bpl   EmuVBL     ; do it till X = zero (remove to EMUWAIT with audio)
-;         bit   SS_Page1   ; always show Page 1
-;         
-;         lda   VidSize
-;         sta   ldrhi      ; always load to page 1
-;         jmp   ChkKey     ; Resume playback using PLAY after keypress check
+EmuWait  ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
+-        jsr   TestVBL    ; sync next vertical blank period
+         dex
+         bpl   -
+         bit   SS_Page1   ; always show Page 1
+         
+         lda   VidSize
+         sta   ldrhi      ; always load to page 1
+         jmp   ChkKey     ; Resume playback using PLAY after keypress check
 
 
 ; ****************************************************************
@@ -562,7 +565,7 @@ SetGS    lda   #0
 TestADM  tya              ; GS ID routine returns with ROM version in Y
          cpy   #0         ; ROM 0?
          beq   +
-         cmy   #1         ; ROM 1?
+         cpy   #1         ; ROM 1?
          beq   +
          lda   #$20
          sta   $0800      ; Alternate Display Mode already on?
@@ -588,7 +591,9 @@ TestADM  tya              ; GS ID routine returns with ROM version in Y
 ; *                           Goodbye!                           *
 ; ****************************************************************
 
-Exit     sta   KeyStrobe
+Exit     jsr   TestVBL    ; wait until v blank to change modes
+
+         sta   KeyStrobe
          sta   SS_Main
          sta   SS_40col
          sta   SS_DblOff

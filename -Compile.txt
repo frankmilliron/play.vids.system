@@ -1,4 +1,67 @@
-cd /Volumes/TRANSFER/play.vids.system
+
+setopt interactivecomments
+# allows comments in zsh
+
+
+# delete old versions
+rm ~/Desktop/VIDS.hdv
+
+
+# set up new disk image
+unzip /Volumes/TRANSFER/A2\ Disk\ Images/blank32mb.hdv.zip -d ~/Desktop
+mv ~/Desktop/blank.hdv ~/Desktop/VIDS.hdv
+cadius RENAMEVOLUME ~/Desktop/VIDS.hdv VIDS
+
+
+# add movie files
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Apple.Logo#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/A2.Forever#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Macintosh.Intro#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.1#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.2#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.3#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Computer.Blast#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Computer.Smash#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Girl.6#5B1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Girl.9#5B1003
+
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/DRAB.MAJESTY.A\#5b1003
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/CHERRY.PIE.v2#5b1003
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/BUILD.A.PHONE#5b1003
+
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/2\ -\ DGR\ 5b1002\ AUX\ then\ Main/TRON\#5b1002
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/1\ -\ GR\ 5b1001/CASSINI\#5b1001
+
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/DHGR/Girl.9\#5B1004
+
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/MTV.ANIM.HGR#5b1003
+
+
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/JUPITER#5b1003
+#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/SATURN.1#5b1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/SATURN.2#5b1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/URANUS#5b1003
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/NEPTUNE.1#5b1003
+
+
+# add QUIT.SYSTEM to drop to BitsyBye on boot
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/A2_Binaries/QUIT.SYSTEM#FF2000
+
+
+# compile video player & add it
+cd /Volumes/TRANSFER/play.vids.system/
 acme play.vids.system.a
-cadius DELETEFILE VIDS.po /VIDS/BASIS.SYSTEM
-cadius ADDFILE VIDS.po /VIDS BASIS.SYSTEM#ff0000
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/BASIS.SYSTEM#ff0000
+
+
+# add PRODOS to make it bootable
+cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/A2_Binaries/PRODOS#FF0000
+
+
+#cadius CHECKVOLUME ~/Desktop/VIDS.hdv
+cadius CATALOG ~/Desktop/VIDS.hdv
+
+
+# close Terminal window
+#exit
+

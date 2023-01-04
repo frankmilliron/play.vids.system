@@ -75,10 +75,10 @@ ver_02 = 1
                 detect_err   = 0        ;set to 1 to to detect errors in no_interrupts mode
                 swap_zp      = 0        ;set to 1 to include code to preserve zpage
                                         ;used only by RWTS mode
-                swap_scrn    = 1        ;set to 1 to preserve screen hole contents across SmartPort calls
+                swap_scrn    = 0        ;set to 1 to preserve screen hole contents across SmartPort calls
                                         ;recommended if allow_aux is used, to avoid device reset
                                         ;requires 64 bytes to save all holes
-                read_scrn    = 1        ;set to 1 to support reading into screen memory
+                read_scrn    = 0        ;set to 1 to support reading into screen memory
                                         ;requires swap_scrn
                 rwts_mode    = 0        ;set to 1 to enable emulation of DOS RWTS when running from hard disk
                                         ;uses a one-time open of a tree file, no other file access allowed
