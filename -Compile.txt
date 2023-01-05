@@ -1,9 +1,9 @@
 
 setopt interactivecomments
-# allows comments in zsh
+# allows comments pasting into zsh (sometimes)
 
 
-# delete old versions
+# delete any old versions
 rm ~/Desktop/VIDS.hdv
 
 
@@ -13,7 +13,7 @@ mv ~/Desktop/blank.hdv ~/Desktop/VIDS.hdv
 cadius RENAMEVOLUME ~/Desktop/VIDS.hdv VIDS
 
 
-# add movie files
+# add video files
 cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Apple.Logo#5B1003
 cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/A2.Forever#5B1003
 cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Macintosh.Intro#5B1003
@@ -60,6 +60,14 @@ cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/A2_Binaries/PRODOS#FF0
 
 #cadius CHECKVOLUME ~/Desktop/VIDS.hdv
 cadius CATALOG ~/Desktop/VIDS.hdv
+
+
+# open new disk image in Virtual ][
+osascript -e 'tell app "Virtual ][" to close every machine saving no'
+osascript -e 'tell app "Virtual ][" to open "/Users/Frank/Library/Application Support/Virtual ][/DefaultConfig.vii"'
+osascript -e 'tell app "Virtual ][" to insert "/Users/Frank/Desktop/VIDS.hdv" into device "S7D1" of front machine'
+osascript -e 'tell app "Virtual ][" to type line "PR#7"'
+osascript -e 'tell app "Virtual ][" to activate'
 
 
 # close Terminal window
