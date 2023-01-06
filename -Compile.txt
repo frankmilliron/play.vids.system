@@ -1,71 +1,87 @@
 
 setopt interactivecomments
-# allows comments pasting into zsh (sometimes)
+# (sometimes) allows pasting into zsh without errors
 
 
-# delete any old versions
-rm ~/Desktop/VIDS.hdv
+# set up variables
+
+imagename=VIDS.hdv
+prodos_vol=VIDS
+outpath=/Users/Frank/Desktop
+image=$outpath/$imagename
+prodos_path=/$prodos_vol
+
+vid_pathNEW=/Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR
+
+vid_pathGR=/Volumes/TRANSFER/play.vids.system/_Older\ Videos/1\ -\ GR\ 5b1001
+vid_pathDGR=/Volumes/TRANSFER/play.vids.system/_Older\ Videos/2\ -\ DGR\ 5b1002\ AUX\ then\ Main
+vid_pathHGR=/Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003
+vid_pathDHGR=/Volumes/TRANSFER/play.vids.system/_Older\ Videos/4\ -\ DHGR\ 5b1004\ AUX\ then\ Main
+
+blank_img=/Volumes/TRANSFER/A2\ Disk\ Images/blank32mb.hdv.zip
+blank_unp=blank.hdv
+
+A2binpath=/Volumes/TRANSFER/A2_Binaries
+V2config="/Users/Frank/Library/Application Support/Virtual ][/DefaultConfig.vii"
 
 
-# set up new disk image
-unzip /Volumes/TRANSFER/A2\ Disk\ Images/blank32mb.hdv.zip -d ~/Desktop
-mv ~/Desktop/blank.hdv ~/Desktop/VIDS.hdv
-cadius RENAMEVOLUME ~/Desktop/VIDS.hdv VIDS
+# delete old versions & set up new disk image
+rm $image
+unzip $blank_img -d $outpath
+mv $outpath/$blank_unp $outpath/$imagename
+cadius RENAMEVOLUME $image $prodos_vol
 
 
 # add video files
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Apple.Logo#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/A2.Forever#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Macintosh.Intro#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.1#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.2#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Car.Crash.3#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Computer.Blast#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Computer.Smash#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Girl.6#5B1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/HGR/Girl.9#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Apple.Logo#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/A2.Forever#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Macintosh.Intro#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Car.Crash.1#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Car.Crash.2#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Car.Crash.3#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Computer.Blast#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Computer.Smash#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Girl.6#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Girl.9#5B1003
 
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/DRAB.MAJESTY.A\#5b1003
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/CHERRY.PIE.v2#5b1003
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/BUILD.A.PHONE#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathGR/CASSINI\#5b1001
 
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/2\ -\ DGR\ 5b1002\ AUX\ then\ Main/TRON\#5b1002
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/1\ -\ GR\ 5b1001/CASSINI\#5b1001
+#cadius ADDFILE $image $prodos_path $vid_pathDGR/TRON\#5b1002
 
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/New\ Video\ Files/3\ Final\ Video\ Files/DHGR/Girl.9\#5B1004
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/BUILD.A.PHONE#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/CHERRY.PIE.v2#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/DRAB.MAJESTY.A\#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/MTV.ANIM.HGR#5b1003
 
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/MTV.ANIM.HGR#5b1003
-
-
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/JUPITER#5b1003
-#cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/SATURN.1#5b1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/SATURN.2#5b1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/URANUS#5b1003
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/_Older\ Videos/3\ -\ HGR\ 5b1003/NEPTUNE.1#5b1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/JUPITER#5b1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/SATURN.1#5b1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/SATURN.2#5b1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/URANUS#5b1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/NEPTUNE.1#5b1003
 
 
 # add QUIT.SYSTEM to drop to BitsyBye on boot
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/A2_Binaries/QUIT.SYSTEM#FF2000
+cadius ADDFILE $image $prodos_vol "$A2binpath/QUIT.SYSTEM#FF2000"
 
 
 # compile video player & add it
 cd /Volumes/TRANSFER/play.vids.system/
 acme play.vids.system.a
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/play.vids.system/BASIS.SYSTEM#ff0000
+cadius ADDFILE $image $prodos_vol BASIS.SYSTEM#ff0000
 
 
 # add PRODOS to make it bootable
-cadius ADDFILE ~/Desktop/VIDS.hdv /VIDS /Volumes/TRANSFER/A2_Binaries/PRODOS#FF0000
+cadius ADDFILE $image $prodos_vol "$A2binpath/PRODOS#FF0000"
 
 
-#cadius CHECKVOLUME ~/Desktop/VIDS.hdv
-cadius CATALOG ~/Desktop/VIDS.hdv
+#cadius CHECKVOLUME $image
+cadius CATALOG $image
 
 
 # open new disk image in Virtual ][
 osascript -e 'tell app "Virtual ][" to close every machine saving no'
-osascript -e 'tell app "Virtual ][" to open "/Users/Frank/Library/Application Support/Virtual ][/DefaultConfig.vii"'
-osascript -e 'tell app "Virtual ][" to insert "/Users/Frank/Desktop/VIDS.hdv" into device "S7D1" of front machine'
+osascript -e 'tell app "Virtual ][" to open "'"$V2config"'"'
+osascript -e 'tell app "Virtual ][" to insert "'"$image"'" into device "S7D1" of front machine'
 osascript -e 'tell app "Virtual ][" to type line "PR#7"'
 osascript -e 'tell app "Virtual ][" to activate'
 
