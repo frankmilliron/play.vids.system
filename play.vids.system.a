@@ -167,18 +167,17 @@ ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
          stx   ldrlo
          stx   sizelo
 
-RelocPlayer
-         ldy   #0         ; total < $400 bytes
--        lda   Relocated,y
-         sta   Reloc,y
-         lda   Relocated+$100,y
-         sta   Reloc+$100,y
-         lda   Relocated+$200,y
-         sta   Reloc+$200,y
-         lda   Relocated+$300,y
-         sta   Reloc+$300,y
+         ldy   #0
+Move     lda   Relocated,y
+         sta   Reloc,y   
          dey
-         bne   -
+         bne   Move
+         inc   Move+2
+         inc   Move+5
+         lda   Move+5
+         cmp   #$10       ; stop moving at $1000
+         bne   Move
+
          jmp   Reloc
 
 C4_Parms                  ; GET_FILE_INFO ($C4) Parameters

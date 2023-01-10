@@ -48,16 +48,17 @@ cadius ADDFILE $image $prodos_path $vid_pathNEW/Girl.9#5B1003
 
 #cadius ADDFILE $image $prodos_path $vid_pathDGR/TRON\#5b1002
 
-#cadius ADDFILE $image $prodos_path $vid_pathHGR/BUILD.A.PHONE#5b1003
-#cadius ADDFILE $image $prodos_path $vid_pathHGR/CHERRY.PIE.v2#5b1003
-#cadius ADDFILE $image $prodos_path $vid_pathHGR/DRAB.MAJESTY.A\#5b1003
-#cadius ADDFILE $image $prodos_path $vid_pathHGR/MTV.ANIM.HGR#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/Build.A.Phone#5B1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/Cherry.Pie.V2#5B1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/Drab.Majesty.A#5B1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/MTV.Anim#5B1003
 
-cadius ADDFILE $image $prodos_path $vid_pathHGR/JUPITER#5b1003
-cadius ADDFILE $image $prodos_path $vid_pathHGR/SATURN.1#5b1003
-cadius ADDFILE $image $prodos_path $vid_pathHGR/SATURN.2#5b1003
-cadius ADDFILE $image $prodos_path $vid_pathHGR/URANUS#5b1003
-cadius ADDFILE $image $prodos_path $vid_pathHGR/NEPTUNE.1#5b1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/Jupiter#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/Saturn.1#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/Saturn.2#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathHGR/Uranus#5B1003
+#cadius ADDFILE $image $prodos_path $vid_pathHGR/Neptune.1#5B1003
+cadius ADDFILE $image $prodos_path $vid_pathNEW/Challenger#5B1003
 
 
 # add QUIT.SYSTEM to drop to BitsyBye on boot
