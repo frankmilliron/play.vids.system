@@ -76,7 +76,7 @@ cadius ADDFILE $image $prodos_vol "$A2binpath/PRODOS#FF0000"
 
 
 #cadius CHECKVOLUME $image
-cadius CATALOG $image
+#cadius CATALOG $image
 
 
 # open new disk image in Virtual ][
