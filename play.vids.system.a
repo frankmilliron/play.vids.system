@@ -443,6 +443,7 @@ GrfxDHGR sta   SS_80col
 ; ****************************************************************
 
 TestVBL  lda   MACHID
+         and   #%11001000 ; bits 3, 6-7 give type
          cmp   #%01000000 ; Do we have a ][+?
          beq   IIplus     ; ][+ doesn't have VBL --- floating bus??
          cmp   #%10001000 ; Do we have a //c?
