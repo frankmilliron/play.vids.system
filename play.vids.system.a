@@ -68,12 +68,14 @@ MACHID         = $BF98    ; ProDOS Machine Identification Byte
 Keyboard       = $C000    ; get keypress
 KeyStrobe      = $C010    ; clear keyboard strobe
 VBL            = $C019    ; vertical blank
+SS_RstVBl      = $C019    ; [IIc] See if VBlInt off (1); reset it
 SS_Main        = $C004    ; write to main mem
 SS_Aux         = $C005    ; write to aux mem
 SS_40col       = $C00C    ; set 40-column mode
 SS_80col       = $C00D    ; set 80-column mode
 SS_Border      = $C034    ; set //gs border color
 SS_Speed       = $C036    ; set //gs processor speed
+SS_RdVBlMsk    = $C041    ; [IIc] See if VBL mask set
 SS_Float       = $C04F    ; test for floating bus
 SS_Grfx        = $C050    ; graphics mode
 SS_Full        = $C052    ; full-screen mode
@@ -81,8 +83,13 @@ SS_Page1       = $C054    ; show graphics page 1
 SS_Page2       = $C055    ; show graphics page 2
 SS_Lores       = $C056    ; turn on lores graphics
 SS_Hires       = $C057    ; turn on hires graphics
+SS_DisVBl      = $C05A    ; [IIc] If IOUDis off: Disable (mask) VBL interrupts
+SS_EnVBl       = $C05B    ; [IIc] If IOUDis off: Enable (allow) VBL interrupts
 SS_DblOn       = $C05E    ; turn on double graphics modes
 SS_DblOff      = $C05F    ; turn off double graphics modes
+SS_RdIOUDis    = $C07E    ; [IIc] read IOUDis; trigger paddle timer; reset VBlInt
+SS_IOUDisOn    = $C07E    ; [IIc] write: disable $C058-$C05F IOU access
+SS_IOUDisOff   = $C07F    ; [IIc] write: enable $C058-$C05F IOU access
 
 ROM_Text2Copy  = $F962    ; turn on alternate display mode on //gs
 ROM_Home       = $FC58    ; clear text screen 1
@@ -447,12 +454,16 @@ TestVBL  lda   MACHID
          cmp   #%01000000 ; Do we have a ][+?
          beq   IIplus     ; ][+ doesn't have VBL --- floating bus??
          cmp   #%10001000 ; Do we have a //c?
-         beq   NoVBL      ; //c does VBL as interrupt
+         beq   IIc
 
+; IIe and IIgs (the latter is patched to swap BPL/BMI since sense is inverted)
+         php
+         sei
 VBLon    bit   VBL        ; Wait for full vertical blank (every 1/60th sec)
          bpl   VBLon
 VBLoff   bit   VBL
          bmi   VBLoff
+         plp
 
 NoVBL    rts
 
@@ -463,6 +474,44 @@ IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+   --message?
          beq   Exit2
          rts
 
+; See Apple IIc Tech Note #9: Detecting VBL
+; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.9.html
+IIc
+        php                     ; save interrupt state
+        sei                     ; disable interrupts
+
+        ; "Note that IOUDis must have been turned off by writing to
+        ; $C07F then ENVBL accessed at $C05B in order to poll for
+        ; $C019 on the IIc."
+
+        lda     SS_RdIOUDis
+        pha                     ; save IOUDis state
+        sta     SS_IOUDisOff    ; turn IOUDis off
+
+        lda     SS_RdVBlMsk
+        pha                     ; save VBL state
+        sta     SS_EnVBl        ; enable VBL polling
+
+        ; "After reading $C019 once the high bit has been set to flag
+        ; VBL, the high bit remains set. A program polling VBL at
+        ; $C019 would have to access either PTrig at $C070 or
+        ; RdIOUDis at $C07E to reset the high-bit for $C019."
+
+        bit     SS_RdIOUDis
+
+-       bit     SS_RstVBl       ; poll
+        bpl     -
+
+        pla                     ; restore VBL state
+        bmi     +
+        sta     SS_DisVBl
++
+        pla                     ; restore IOUDis state
+        bmi     +
+        sta     SS_IOUDisOn
++
+        plp                     ; restore interrupt state
+        rts
 
 ; ****************************************************************
 ; *                    Control-Reset Handler                     *
@@ -560,6 +609,11 @@ SetGS    lda   #0
          and   #%01111111
          sta   SS_Speed   ; sets processor speed to normal  - store/restore?
 
+         lda   #$30       ; //gs reverses VBL, so
+         sta   VBLon+3    ; swap BPL for BMI
+         lda   #$10
+         sta   VBLoff+3   ; swap BMI for BPL
+
 TestADM  tya              ; GS ID routine returns with ROM version in Y
          cpy   #0         ; ROM 0?
          beq   +
@@ -578,11 +632,6 @@ TestADM  tya              ; GS ID routine returns with ROM version in Y
 ;+
 ++       rts
 
-
-;         lda   #$30       ; //gs reverses VBL, so
-;         sta   VBLon+3    ; swap BPL for BMI
-;         lda   #$10
-;         sta   VBLoff+3   ; swap BMI for BPL
 
 
 ; ****************************************************************
