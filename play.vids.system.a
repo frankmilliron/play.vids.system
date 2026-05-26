@@ -334,6 +334,12 @@ Single   lda   #0
          bcs   Exit1
 
 SetGrfx  jsr   Grfx       ; page loaded, switch graphics modes  **self-modified
+
+         ldx   EmuVar     ; target 10fps
+-        jsr   TestVBL    ; sync next vertical blank period
+         dex
+         bpl   -
+
 PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
          lda   PageFlip+1
          eor   #1         ; flip between showing page 1 & 2
@@ -564,13 +570,17 @@ Emu3     inc   EmuVar     ; found potential emulator, increment count
 Emu4     lda   EmuVar     ; load counts
          cmp   #$FF       ; 255 tests of 255 runs positive for emulation?
          beq   EmuFix     ; if yes, patch the code
-         rts              ; otherwise, just exit cuz we're on "normal" "hardware"
+
+         lda   #4         ; assume real hardware has overhead
+         sta   EmuVar     ; so wait less per frame
+
+         rts
 
 EmuFix   lda   #$4C       ; JMP
          sta   PageFlip
-         lda   #<EmuWait  ; set branch from normal playback routine
+         lda   #<EmuProc  ; set branch from normal playback routine
          sta   PageFlip+1 ; during page flipping operations
-         lda   #>EmuWait  ; (which emulators can't display properly)
+         lda   #>EmuProc  ; (which some emulators can't display properly)
          sta   PageFlip+2 ; to slightly revised EmuWait routine
 
          lda   VidSize    ; first load to page 1
@@ -581,12 +591,8 @@ EmuFix   lda   #$4C       ; JMP
 
          rts
 
-EmuWait  ldx   EmuVar     ; wait for 6 vertical blank periods (10fps)
--        jsr   TestVBL    ; sync next vertical blank period
-         dex
-         bpl   -
-         bit   SS_Page1   ; always show Page 1
-         
+EmuProc  bit   SS_Page1   ; always show Page 1
+
          lda   VidSize
          sta   ldrhi      ; always load to page 1
          jmp   ChkKey     ; Resume playback using PLAY after keypress check
