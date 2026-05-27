@@ -31,7 +31,7 @@ ver_02 = 1
                 poll_drive   = 0        ;set to 1 to check if disk is in drive, recommended if allow_multi is enabled
                 use_smartport= 1        ;set to 1 to enable support for more than two MicroDrive (or more than four CFFA) partitions
                 override_adr = 1        ;set to 1 to require an explicit load address
-                aligned_read = 0        ;set to 1 if all reads can be a multiple of block size (required for RWTS mode)
+                aligned_read = 1        ;set to 1 if all reads can be a multiple of block size (required for RWTS mode)
                 enable_readseq=1        ;set to 1 to enable reading multiple sequential times from the same file without seek
                                         ;(exposes a fixed address that can be called for either floppy or hard disk support)
                                         ;requires fast_subindex
@@ -61,14 +61,13 @@ ver_02 = 1
                 always_trees = 1        ;set to 1 if the only file access involves tree files
                                         ;not compatible with allow_subdir, allow_saplings
                                         ;required in RWTS mode if allow_trees is enabled
-                detect_treof = 1        ;detect EOF during read of tree files
+                detect_treof = 0        ;detect EOF during read of tree files
                 fast_subindex= 1        ;keep subindex block in memory, requires an additional 512 bytes of RAM
                                         ;halves the disk access for double the speed (ideal for RWTS mode)
-                allow_sparse = 0        ;enable support for reading sparse files
+                allow_sparse = 1        ;enable support for reading sparse files
                 write_sparse = 0        ;enable support for writing to sparse files (blocks are allocated even if empty)
                                         ;used only by RWTS mode, writing to sparse files in non-RWTS mode will corrupt the file!
-                bounds_check = 0        ;set to 1 to prevent access beyond the end of the file
-                                        ;but limits file size to 64k-2 bytes.
+                bounds_check = 1        ;set to 1 to prevent access beyond the end of the file
                 return_size  = 0        ;set to 1 to receive file size on open in read-only mode
                 one_shot     = 0        ;set to 1 to load entire file in one pass (avoids the need to specify size)
                 no_interrupts= 0        ;set to 1 to disable interrupts across calls
@@ -94,8 +93,8 @@ ver_02 = 1
                 load_banked  = 0        ;set to 1 to load into banked RAM instead of main RAM (can be combined with load_aux for aux banked)
                 lc_bank      = 1        ;load into specified bank (1 or 2) if load_banked=1
                 one_page     = 0        ;set to 1 if verbose mode says that you should (smaller code)
-                two_pages    = 1        ;default size
-                three_pages  = 0        ;set to 1 if verbose mode says that you should (code is larger than two pages)
+                two_pages    = 0        ;default size
+                three_pages  = 1        ;set to 1 if verbose mode says that you should (code is larger than two pages)
 
                 ;user-defined driver load address
 !if load_banked = 1 {
@@ -2718,7 +2717,7 @@ hddfoundname    iny
   !if (bounds_check + return_size + one_shot) > 0 {
                 ;cache EOF (file size, loaded backwards)
 
-                ldy     #EOF_HI
+                ldy     #EOF_HI+1
                 lda     (scratchlo), y
     !if (enable_write + aligned_read) > 0 {
                 tax
@@ -2735,10 +2734,6 @@ hddfoundname    iny
                 sec
         } ;enable_write = 1 and one_shot = 0
       } ;aligned_read = 0
-                adc     #$fe
-                txa
-                adc     #1
-                and     #$fe
       !if aligned_read = 0 {
                 tax
                 lda     #0
@@ -2751,7 +2746,8 @@ hddfoundname    iny
         } ;one_shot = 0
       } else { ;aligned_read = 1
         !if one_shot = 0 {
-                sta     blefthi
+                stx     blefthi
+                sta     bleftlo
         } else { ;one_shot = 1
                 sta     sizehi
         } ;one_shot = 0
@@ -2857,6 +2853,12 @@ hddfoundname    iny
 
 hddrdfile
 hddrdwrfile
+                lda     bleftlo
+                ora     blefthi
+                bne     +
+                sec
+                rts
++
 !if allow_subdir = 1 {
                 clc
 ++
@@ -2995,13 +2997,6 @@ hddcopyblock
       } ;allow_aux = 0
     } ;one_shot = 0
   } else { ;aligned_read = 1
-    !if bounds_check = 1 {
-                lda     blefthi
-                cmp     sizehi
-                bcs     +
-                sta     sizehi
-+
-    } ;bounds_check = 1
     !if allow_aux = 1 {
                 ldx     auxreq
                 jsr     hddsetaux
@@ -3316,6 +3311,7 @@ savebyte
 } ;allow_sparse = 0
 !if rwts_mode = 0 {
   !if allow_sparse = 1 {
+                tay
                 beq     hddissparse
                 pla
   } ;allow_sparse = 1
@@ -3331,7 +3327,28 @@ savebyte
   !if enable_write = 1 {
                 jsr     hddseekrdwr
   } else { ;enable_write = 0
+                ldy     adrhi
+                cpy     #8
+                bcs     ++
+                sty     sizelo
+                ldy     #>hddencbuf
+                sty     adrhi
+++              php
                 jsr     hddseekrd
+                plp
+                bcs     ++
+                lda     sizelo
+                sta     adrhi
+                ldy     #0
+-               lda     hddencbuf, y
+                sta     (adrlo), y
+                inc     adrhi
+                lda     hddencbuf + $100, y
+                sta     (adrlo), y
+                dec     adrhi
+                iny
+                bne     -
+++              clc
   } ;enable_write = 1
   !if aligned_read = 0 {
                 plp
@@ -3343,16 +3360,17 @@ hddresparse
   } ;aligned_read = 0
                 inc     adrhi
                 inc     adrhi
-  !if aligned_read = 0 {
 resumescrn
     !if bounds_check = 1 {
-                dec     blefthi
-                dec     blefthi
-    } ;bounds_check = 1
-  } ;aligned_read = 0
-                dec     sizehi
-                dec     sizehi
+                lda     bleftlo
                 bne     ++
+                dec     blefthi
+++              dec     bleftlo
+                dec     bleftlo
+    } ;bounds_check = 1
+                dec     sizehi
+                dec     sizehi
+                bne     hddrdwrloop
   !if aligned_read = 0 {
                 clc
                 lda     sizelo
@@ -3814,7 +3832,6 @@ hdddataend
           } ;hdddirbuf
         } ;hdddirbuf
       }
-      !if ((aligned_read xor 1) + rwts_mode) > 0 {
         !if fast_subindex = 0 {
           hddencbuf = hdddirbuf ;writes come from cache
         } else { ;fast_subindex = 1
@@ -3829,10 +3846,8 @@ hdddataend
             } ;hddencbuf
           } ;hdddirbuf
         } ;fast_subindex
-      } ;aligned_read = 0 or rwts_mode = 1
       !if allow_trees = 1 {
         !if fast_trees = 1 {
-          !if ((aligned_read xor 1) + rwts_mode) > 0 {
             !if hddencbuf < reloc {
               hddtreebuf = hddencbuf - $200
             } else { ;hddencbuf
@@ -3843,18 +3858,6 @@ hdddataend
                 } ;hddtreebuf
               } ;hddtreebuf
             } ;hddencbuf
-          } else { ;aligned_read = 1
-            !if hdddirbuf < reloc {
-              hddtreebuf = hdddirbuf - $200
-            } else { ;hdddirbuf
-              hddtreebuf = hdddirbuf + $200
-              !if (hddtreebuf + $200) > $c000 {
-                !if hddtreebuf < $d000 {
-                  !set hddtreebuf = reloc - $200
-                } ;hddtreebuf
-              } ;hddtreebuf
-            } ;hdddirbuf
-          } ;aligned_read
         } else { ;fast_trees = 0
             hddtreebuf = hdddirbuf
         } ;fast_trees

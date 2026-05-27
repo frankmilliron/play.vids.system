@@ -209,6 +209,8 @@ Relocated
          jsr   TestGS
          jsr   SetReset
          jsr   TestVBL    ; wait until v blank to change modes
+         lda   #0
+         sta   auxreq
 
          lda   VidType    ; jump table?
          cmp   #1
