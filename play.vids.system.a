@@ -108,7 +108,7 @@ ldrhi          = $56      ; address to load the data
 namlo          = $57      ; name of file to access
 namhi          = $58      ; name of file to access
 treeidx        = $5B      ; tree index
-blkindx        = $F8      ; block index
+blkindx        = $5F      ; block index
 hddrdwrpart    = $1000    ; read part of file
 
 
@@ -271,67 +271,81 @@ SetupDHGR
 SetupAux jsr   EmuTest
          sta   SS_Aux
          ldy   #0
-CopyPro  lda   $1000,y    ; copy ProRWTS2 to AUX
-         sta   $1000,y
-         lda   $1100,y
-         sta   $1100,y
-         lda   $1200,y
-         sta   $1200,y
+CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
+         sta   reloc,y
+         lda   reloc+$100,y
+         sta   reloc+$100,y
+; NOTE: If `three_pages` defined in ProRWTS2 code, copy reloc+$200 too
          iny
          bne   CopyPro
          sta   SS_Main
 
-;SetupAux jsr   hddopendir
+         jsr   hddopendir
 
          sta   SS_Aux
-CopyTree lda   $1700,x    ; X is set by hddopendir
-         sta   $1700,x
-         lda   $1800,x
-         sta   $1800,x    ; copy ProRWTS2 tree buffer to AUX
-         inx
-         bne   CopyTree
-Adjust   sta   SS_Aux
-CopyBlk  lda   $1300,x
-         sta   $1300,x
-         lda   $1400,x
-         sta   $1400,x    ; copy ProRWTS2 block buffer to AUX
-         inx
-         bne   CopyBlk
-         beq   Resume ;Single
 
+-        lda   hddtreebuf,x         ; X is set by hddopendir
+         sta   hddtreebuf,x
+         lda   hddtreebuf+$100,x
+         sta   hddtreebuf+$100,x    ; copy ProRWTS2 tree buffer to AUX
+         inx
+         bne   -
+
+         ldx   #0
+-        lda   hdddirbuf,x
+         sta   hdddirbuf,x
+         lda   hdddirbuf+$100,x
+         sta   hdddirbuf+$100,x    ; copy ProRWTS2 block buffer to AUX
+         inx
+         bne   -
+
+         sta   SS_Main
+
+; Existing DGR files start with a half-frame that needs to be
+; discarded. This behavior matches the bespoke player code associated
+; with the files.
+; TODO: Fix the files?
+
+         jmp   Resume
 
 ; ****************************************************************
 ; *                    Main Playback Routine                     *
 ; ****************************************************************
 
-
-Play     lda   VidType    ; single or double load?
-         cmp   #1
-         beq   Single
-         cmp   #3
-         beq   Single
-
-Double   lda   #1    
-         sta   auxreq     ; first half of frame loaded to aux first
+Play
+         lda   #0
+         sta   auxreq
          lda   VidSize
-         sta   sizehi     ; refresh on each load
+         sta   sizehi
          jsr   hddrdwrpart
-         bcs   Exit1      ; quit at end of file  <----Fix
+         bcs   Exit1
+
+         lda   VidType    ; single or double load?
+         cmp   #1
+         beq   SetGrfx
+         cmp   #3
+         beq   SetGrfx
+
          lda   blkindx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
-         beq   Adjust
-Resume   lda   #0         ; load second part in main
+         bne   Resume
+
+         sta   SS_Aux
+         ldx   #0
+-        lda   hdddirbuf,x
+         sta   hdddirbuf,x
+         lda   hdddirbuf+$100,x
+         sta   hdddirbuf+$100,x    ; copy ProRWTS2 block buffer to AUX
+         inx
+         bne   -
+         sta   SS_Main
+
+Resume
+         lda   #1         ; set load to AUX
          sta   auxreq
          lda   VidSize
          sta   sizehi     ; refresh on each load
-         jsr   hddrdwrpart
-         bcs   Exit1
-         bcc   SetGrfx
 
-Single   lda   #0
-         sta   auxreq     ; single modes main only
-         lda   VidSize
-         sta   sizehi
          jsr   hddrdwrpart
          bcs   Exit1
 
