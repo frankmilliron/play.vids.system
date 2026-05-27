@@ -283,30 +283,15 @@ CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
          jsr   hddopendir
 
          sta   SS_Aux
-
 -        lda   hddtreebuf,x         ; X is set by hddopendir
          sta   hddtreebuf,x
          lda   hddtreebuf+$100,x
          sta   hddtreebuf+$100,x    ; copy ProRWTS2 tree buffer to AUX
          inx
          bne   -
-
-         ldx   #0
--        lda   hdddirbuf,x
-         sta   hdddirbuf,x
-         lda   hdddirbuf+$100,x
-         sta   hdddirbuf+$100,x    ; copy ProRWTS2 block buffer to AUX
-         inx
-         bne   -
-
          sta   SS_Main
 
-; Existing DGR files start with a half-frame that needs to be
-; discarded. This behavior matches the bespoke player code associated
-; with the files.
-; TODO: Fix the files?
-
-         jmp   Resume
+         jmp   Resume              ; hddopendir read the first half
 
 ; ****************************************************************
 ; *                    Main Playback Routine                     *
@@ -328,8 +313,9 @@ Play
 
          lda   blkindx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
-         bne   Resume
+         bne   +
 
+Resume
          sta   SS_Aux
          ldx   #0
 -        lda   hdddirbuf,x
@@ -340,7 +326,7 @@ BlkIndex cmp   #2         ; watch for 64kb wrap-around
          bne   -
          sta   SS_Main
 
-Resume
++
          lda   #1         ; set load to AUX
          sta   auxreq
          lda   VidSize
@@ -559,7 +545,17 @@ DoReset1 lda   #0         ; set load to main memory
          sta   sizehi
          jsr   hddrdwrpart
          bcs   Exit3
+
+
+         lda   VidType
+         cmp   #2
+         beq   RestartDouble
+         cmp   #4
+         beq   RestartDouble
          jmp   Play
+
+RestartDouble
+         jmp   Resume
 
 Exit3    jmp   Exit
 
