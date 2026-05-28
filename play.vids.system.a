@@ -24,9 +24,9 @@ x
 
 ; Memory Map:
 ; Player core relocated to $C00-1000 ($400)
-; ProRWTS2 installed to $1000-1300 ($300)
-; ProRWTS tree buffer $1300-1500 ($200)
-; ProRWTS block buffer $1700-1900 ($200)
+; ProRWTS2 installed to $1000-1200 ($200)
+; ProRWTS tree buffer $1200-1400 ($200)
+; ProRWTS block buffer $1600-1700 ($200)
 ; Video loaded directly to video buffers at $400/$800 & $2000/$4000
 
 
@@ -108,9 +108,33 @@ ldrhi          = $56      ; address to load the data
 namlo          = $57      ; name of file to access
 namhi          = $58      ; name of file to access
 treeidx        = $5B      ; tree index
-blkindx        = $5F      ; block index
-hddrdwrpart    = $1000    ; read part of file
+blkidx         = $5F      ; block index
 
+kKeyLeftArrow  = $88
+kKeyRightArrow = $95
+kKeyEscape     = $9B
+kKeySpace      = $A0
+kKeyDigit1     = $B1
+kKeyDigit2     = $B2
+
+kFileTypeAnimation = $5B
+kAuxTypeSignature  = $10
+kVidTypeGR     = $01
+kVidTypeDGR    = $02
+kVidTypeHGR    = $03
+kVidTypeDHGR   = $04
+
+kVidSizeGR     = $400
+kVidSizeHGR    = $2000
+kVidPage2GR    = $800
+kVidPage2HGR   = $4000
+kVidPageEORGR  = $0C00      ; XOR to alternate $400/$800
+kVidPageEORHGR = $6000      ; XOR to alternate $2000/$4000
+
+kOpcodeBITabs  = $2C
+kOpcodeJMPabs  = $4C
+kOpcodeBMI     = $30
+kOpcodeBPL     = $10
 
 ; ****************************************************************
 ; *                  Create BASIS.SYSTEM Format                  *
@@ -149,11 +173,11 @@ GetAttributes
          !word C4_Parms
 
          lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
-         cmp   #$5B
+         cmp   #kFileTypeAnimation
          beq   AuxType
          jmp   Exit+Reloc ; we haven't relocated yet
 AuxType  lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
-         cmp   #$10
+         cmp   #kAuxTypeSignature
          beq   SetType
          jmp   Exit+Reloc ; we haven't relocated yet
 SetType  lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
@@ -180,7 +204,7 @@ Move     lda   Relocated,y
          inc   Move+2
          inc   Move+5
          lda   Move+5
-         cmp   #$10       ; stop moving at $1000
+         cmp   #>hddrdwrpart
          bne   Move
 
          jmp   Reloc
@@ -213,59 +237,59 @@ Relocated
          sta   auxreq
 
          lda   VidType    ; jump table?
-         cmp   #1
+         cmp   #kVidTypeGR
          beq   SetupGR
-         cmp   #2
+         cmp   #kVidTypeDGR
          beq   SetupDGR
-         cmp   #3
+         cmp   #kVidTypeHGR
          beq   SetupHGR
-         cmp   #4
+         cmp   #kVidTypeDHGR
          beq   SetupDHGR
          jmp   Exit
 
 SetupGR
-         lda   #$04       ; $400 bytes at $400
+         lda   #>kVidSizeGR ; $400 bytes at $400
          sta   VidSize
          sta   sizehi
-         lda   #$08       ; first load to page 2
+         lda   #>kVidPage2GR ; first load to page 2
          sta   ldrhi
-         lda   #$0C
+         lda   #>kVidPageEORGR
          sta   LoadEOR    ; swap ldrhi between $400 & $800
          jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
 SetupDGR
-         lda   #$04       ; $400 bytes at $400, two times per frame, AUX then Main
+         lda   #>kVidSizeGR ; $400 bytes at $400, two times per frame, AUX then Main
          sta   VidSize
          sta   sizehi
-         lda   #$08       ; first load to page 2 
+         lda   #>kVidPage2GR ; first load to page 2
          sta   ldrhi
-         lda   #$0C       ; swap ldrhi between $400 & $800
+         lda   #>kVidPageEORGR ; swap ldrhi between $400 & $800
          sta   LoadEOR
          jmp   SetupAux
 
 SetupHGR
-         lda   #$20
+         lda   #>kVidSizeHGR
          sta   VidSize    ; $2000 bytes at $2000
          sta   sizehi
-         lda   #$40       ; first load to page 2
+         lda   #>kVidPage2HGR ; first load to page 2
          sta   ldrhi
-         lda   #$60
+         lda   #>kVidPageEORHGR
          sta   LoadEOR    ; swap ldrhi between $2000 & $4000
          jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
 SetupDHGR
-         lda   #$20
+         lda   #>kVidSizeHGR
          sta   VidSize    ; $2000 bytes at $2000, two times per frame, AUX then Main
          sta   sizehi
-         lda   #$40       ; first load to page 2
+         lda   #>kVidPage2HGR ; first load to page 2
          sta   ldrhi
          lda   #$10
          sta   BlkIndex+1 ; has to be larger for DHGR ???
-         lda   #$60
+         lda   #>kVidPageEORHGR
          sta   LoadEOR    ; fall through
 
 SetupAux jsr   EmuTest
@@ -306,12 +330,12 @@ Play
          bcs   Exit1
 
          lda   VidType    ; single or double load?
-         cmp   #1
+         cmp   #kVidTypeGR
          beq   SetGrfx
-         cmp   #3
+         cmp   #kVidTypeHGR
          beq   SetGrfx
 
-         lda   blkindx
+         lda   blkidx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
          bne   +
 
@@ -364,10 +388,9 @@ Exit1    jmp   Exit
 
 ;TODO double modes increment 2 for ff/rew?
 
-
 Key      sta   KeyStrobe
 
-Rew      cmp   #$88       ; left arrow key pressed? ($08+80)
+Rew      cmp   #kKeyLeftArrow ; left arrow key pressed?
          bne   FastFor
          ldx   treeidx
          beq   Play       ; if treeidx is already 0 don't rewind
@@ -377,35 +400,35 @@ Rew      cmp   #$88       ; left arrow key pressed? ($08+80)
 Rew1     stx   treeidx
          jmp   DoReset1   ; restart playback using reset routine
 
-FastFor  cmp   #$95       ; right arrow key pressed? ($15+80)
+FastFor  cmp   #kKeyRightArrow ; right arrow key pressed?
          bne   Pause
          inc   treeidx
          jmp   DoReset1
 
-Pause    cmp   #$A0       ; space bar pressed? ($20+80)
+Pause    cmp   #kKeySpace ; space bar pressed?
          bne   OneKey
 Pause1   lda   Keyboard
          bpl   Pause1     ; test for second keypress
-         cmp   #$9B       ; escape key pressed? ($1B+80)
+         cmp   #kKeyEscape ; escape key pressed?
          beq   Exit2
-         cmp   #$A0
+         cmp   #kKeySpace
          beq   Pause2
          bit   KeyStrobe
          jmp   Pause1
 Pause2   bit   KeyStrobe
          jmp   Play
 
-OneKey   cmp   #$B1       ; "1" key pressed? ($31+80)
+OneKey   cmp   #kKeyDigit1 ; "1" key pressed?
          bne   TwoKey
          bit   SS_DblOff  ; turn off double graphics mode
          jmp   Play
 
-TwoKey   cmp   #$B2       ; "2" key pressed? ($32+80)
+TwoKey   cmp   #kKeyDigit2 ; "2" key pressed? ($32+80)
          bne   Esc
          bit   SS_DblOn   ; turn on double graphics mode
          jmp   Play
 
-Esc      cmp   #$9B       ; escape key pressed? ($1B+80)
+Esc      cmp   #kKeyEscape ; escape key pressed? ($1B+80)
          beq   Exit2
          jmp   Play
 
@@ -416,20 +439,20 @@ Exit2    jmp   Exit
 ; *                    Turn on Graphics Modes                    *
 ; ****************************************************************
 
-Grfx     lda   #$2C       ; BIT
+Grfx     lda   #kOpcodeBITabs
          sta   SetGrfx    ; only need to call once
 
          sta   SS_Grfx
          sta   SS_Full
 
          lda   VidType    ; jump table instead???
-         cmp   #1
+         cmp   #kVidTypeGR
          beq   GrfxGR
-         cmp   #2
+         cmp   #kVidTypeDGR
          beq   GrfxDGR
-         cmp   #3
+         cmp   #kVidTypeHGR
          beq   GrfxHGR
-         cmp   #4
+         cmp   #kVidTypeDHGR
          beq   GrfxDHGR
 
 GrfxGR   sta   SS_40col
@@ -476,9 +499,9 @@ VBLoff   bit   VBL
 NoVBL    rts
 
 IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+   --message?
-         cmp   #2
+         cmp   #kVidTypeDGR
          beq   Exit2
-         cmp   #4
+         cmp   #kVidTypeDHGR
          beq   Exit2
          rts
 
@@ -540,7 +563,7 @@ DoReset  sta   KeyStrobe
          dec   treeidx    ; play last section again
 DoReset1 lda   #0         ; set load to main memory
          sta   auxreq
-         sta   blkindx    ; clear entries
+         sta   blkidx     ; clear entries
          lda   VidSize
          sta   sizehi
          jsr   hddrdwrpart
@@ -548,9 +571,9 @@ DoReset1 lda   #0         ; set load to main memory
 
 
          lda   VidType
-         cmp   #2
+         cmp   #kVidTypeDGR
          beq   RestartDouble
-         cmp   #4
+         cmp   #kVidTypeDHGR
          beq   RestartDouble
          jmp   Play
 
@@ -588,7 +611,7 @@ Emu4     lda   EmuVar     ; load counts
 
          rts
 
-EmuFix   lda   #$4C       ; JMP
+EmuFix   lda   #kOpcodeJMPabs
          sta   PageFlip
          lda   #<EmuProc  ; set branch from normal playback routine
          sta   PageFlip+1 ; during page flipping operations
@@ -627,9 +650,9 @@ SetGS    lda   #0
          and   #%01111111
          sta   SS_Speed   ; sets processor speed to normal  - store/restore?
 
-         lda   #$30       ; //gs reverses VBL, so
+         lda   #kOpcodeBMI ; //gs reverses VBL, so
          sta   VBLon+3    ; swap BPL for BMI
-         lda   #$10
+         lda   #kOpcodeBPL
          sta   VBLoff+3   ; swap BMI for BPL
 
 TestADM  tya              ; GS ID routine returns with ROM version in Y
@@ -637,13 +660,13 @@ TestADM  tya              ; GS ID routine returns with ROM version in Y
          beq   +
          cpy   #1         ; ROM 1?
          beq   +
-         lda   #$20
+         lda   #' '
          sta   $0800      ; Alternate Display Mode already on?
          lda   #$FF
          jsr   ROM_Wait   ; skip a VBL cycle
 !cpu 65816
          lda   $E00800    ; If yes, we shadow copied to bank $E0
-         cmp   #$20
+         cmp   #' '
          beq   +          ; only call TEXT2COPY if we know it's off
 !cpu 6502                 ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
 +        jsr   ROM_Text2Copy         ; set Alternate Display Mode on IIgs
@@ -688,5 +711,6 @@ EndReloc
 
          !source "prorwts2.a"
 
-         !warn "Relocated code is ", EndReloc-Reloc, "bytes. Must be less than $400."
-
+!if EndReloc > hddrdwrpart {
+         !error "Relocated code ends at ", EndReloc, " must end by ", hddrdwrpart
+}
