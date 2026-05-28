@@ -110,6 +110,14 @@ namhi          = $58      ; name of file to access
 treeidx        = $5B      ; tree index
 blkidx         = $5F      ; block index
 
+A1L            = $3C      ; MOVE/AUXMOVE: Source start, low-order byte
+A1H            = $3D      ; MOVE/AUXMOVE: Source start, high-order byte
+A2L            = $3E      ; MOVE/AUXMOVE: Source end, low-order byte
+A2H            = $3F      ; MOVE/AUXMOVE: Source end, high-order byte
+A4L            = $42      ; MOVE/AUXMOVE: Destination start, low-order byte
+A4H            = $43      ; MOVE/AUXMOVE: Destination start, high-order byte
+ROM_AUXMOVE    = $C311    ; [IIe/IIc/IIgs]
+
 kKeyLeftArrow  = $88
 kKeyRightArrow = $95
 kKeyEscape     = $9B
@@ -315,6 +323,9 @@ CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
          bne   -
          sta   SS_Main
 
+         sec   ; main>aux
+         jsr   SyncBuffer
+
          jmp   Resume              ; hddopendir read the first half
 
 ; ****************************************************************
@@ -322,40 +333,33 @@ CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
 ; ****************************************************************
 
 Play
-         lda   #0
-         sta   auxreq
-         lda   VidSize
-         sta   sizehi
-         jsr   hddrdwrpart
-         bcs   Exit1
-
          lda   VidType    ; single or double load?
          cmp   #kVidTypeGR
-         beq   SetGrfx
+         beq   Resume
          cmp   #kVidTypeHGR
-         beq   SetGrfx
+         beq   Resume
+
+         lda   #1
+         sta   auxreq     ; first half of frame loaded to aux first
+         lda   VidSize
+         sta   sizehi     ; refresh on each load
+         clc              ; ProRWTS2 assumes this (or may exit on sparse blocks)
+         jsr   hddrdwrpart
+         bcs   Exit1      ; quit at end of file  <----Fix
 
          lda   blkidx
 BlkIndex cmp   #2         ; watch for 64kb wrap-around
-         bne   +
+         bne   Resume
+
+         clc   ; aux>main
+         jsr   SyncBuffer
 
 Resume
-         sta   SS_Aux
-         ldx   #0
--        lda   hdddirbuf,x
-         sta   hdddirbuf,x
-         lda   hdddirbuf+$100,x
-         sta   hdddirbuf+$100,x    ; copy ProRWTS2 block buffer to AUX
-         inx
-         bne   -
-         sta   SS_Main
-
-+
-         lda   #1         ; set load to AUX
+         lda   #0         ; set load to main
          sta   auxreq
          lda   VidSize
          sta   sizehi     ; refresh on each load
-
+         clc              ; ProRWTS2 assumes this (or may exit on sparse blocks)
          jsr   hddrdwrpart
          bcs   Exit1
 
@@ -578,6 +582,8 @@ DoReset1 lda   #0         ; set load to main memory
          jmp   Play
 
 RestartDouble
+         sec   ; main>aux
+         jsr   SyncBuffer
          jmp   Resume
 
 Exit3    jmp   Exit
@@ -673,6 +679,24 @@ TestADM  tya              ; GS ID routine returns with ROM version in Y
 ;+
 ++       rts
 
+
+; ****************************************************************
+; *              Sync ProRWTS2 Buffer Main <-> Aux                *
+; ****************************************************************
+
+SyncBuffer
+         lda   #<hdddirbuf
+         sta   A1L
+         sta   A4L
+         lda   #>hdddirbuf
+         sta   A1H
+         sta   A4H
+         lda   #<(hdddirbuf+$200-1)
+         sta   A2L
+         lda   #>(hdddirbuf+$200-1)
+         sta   A2H
+         jsr   ROM_AUXMOVE
+         rts
 
 
 ; ****************************************************************
