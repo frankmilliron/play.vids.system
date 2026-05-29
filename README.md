@@ -63,8 +63,8 @@ Now when a user boots `vids.hdv` in an emulator, [Bitsy Bye](https://prodos8.com
 ## Keyboard Controls
 
 * <kbd>Space</kbd> - Pause/Resume
-* <kbd>→</kbd> - Skip backwards several frames
-* <kbd>←</kbd> - Skip forwards several frames
+* <kbd>→</kbd> - Skip forwards several frames
+* <kbd>←</kbd> - Skip backwards several frames
 * <kbd>Esc</kbd> - Quit back to ProDOS
 
-The <kbd>1</kbd> and <kbd>2</kbd> keys can be used to force single/double resolution, although this is main for debugging.
+The <kbd>1</kbd> and <kbd>2</kbd> keys can be used to force single/double resolution, although this is mainly for debugging.
