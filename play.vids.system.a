@@ -370,6 +370,11 @@ Resume
          jsr   hddrdwrpart
          bcs   Exit1
 
+         ldx   EmuVar     ; target 10fps
+-        jsr   TestVBL    ; sync next vertical blank period
+         dex
+         bpl   -
+
 SetGrfx  jsr   Grfx       ; page loaded, switch graphics modes  **self-modified
 
 PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
@@ -381,13 +386,7 @@ PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
          eor   LoadEOR    ; flip between loading to page 1 & 2
          sta   ldrhi
 
-FrameWait
-         ldx   EmuVar     ; target 10fps
--        jsr   TestVBL    ; sync next vertical blank period
-         dex
-         bpl   -
-
-         lda   Keyboard
+ChkKey   lda   Keyboard
          bpl   Play       ; no key pressed
          jmp   Key
 
@@ -650,7 +649,7 @@ EmuProc  bit   SS_Page1   ; always show Page 1
 
          lda   VidSize
          sta   ldrhi      ; always load to page 1
-         jmp   FrameWait  ; Resume playback
+         jmp   ChkKey     ; Resume playback
 
 
 ; ****************************************************************
