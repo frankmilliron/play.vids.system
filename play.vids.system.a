@@ -69,6 +69,8 @@ Keyboard       = $C000    ; get keypress
 KeyStrobe      = $C010    ; clear keyboard strobe
 VBL            = $C019    ; vertical blank
 SS_RstVBl      = $C019    ; [IIc] See if VBlInt off (1); reset it
+SS_RdMain      = $C002    ; read from main mem
+SS_RdAux       = $C003    ; read from aux mem
 SS_Main        = $C004    ; write to main mem
 SS_Aux         = $C005    ; write to aux mem
 SS_40col       = $C00C    ; set 40-column mode
@@ -307,22 +309,29 @@ CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
          lda   reloc+$100,y
          sta   reloc+$100,y
 ; NOTE: If `three_pages` defined in ProRWTS2 code, copy reloc+$200 too
+         lda   VidName,y  ; it needs the pathname
+         sta   VidName,y
+         lda   HackAux,y  ; and we need to call it from aux
+         sta   HackAux,y
          iny
          bne   CopyPro
-         sta   SS_Main
 
-         jsr   hddopendir
+         sta   SS_RdAux             ; override auxreq for initial open/read
+HackAux                             ; mirrored to aux for the open/read
+         lda   #1                   ; first half-frame loads to aux
+         sta   auxreq
+         jsr   hddopendir           ; returns with read/write main memory
 
-         sta   SS_Aux
+         sta   SS_RdAux             ; copy `hddtreebuf` aux>main
 -        lda   hddtreebuf,x         ; X is set by hddopendir
          sta   hddtreebuf,x
          lda   hddtreebuf+$100,x
          sta   hddtreebuf+$100,x    ; copy ProRWTS2 tree buffer to AUX
          inx
          bne   -
-         sta   SS_Main
+         sta   SS_RdMain
 
-         sec   ; main>aux
+         clc   ; aux>main
          jsr   SyncBuffer
 
          jmp   Resume              ; hddopendir read the first half
