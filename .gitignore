@@ -1,0 +1,11 @@
+# macOS Finder detritus
+.DS_Store
+
+# Cadius detritus
+_FileInformation.txt
+
+# Generated files
+out/
+
+# Optional custom packaging script
+add_videos.sh

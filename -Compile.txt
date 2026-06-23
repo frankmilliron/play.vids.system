@@ -62,17 +62,17 @@ cadius ADDFILE $image $prodos_path $vid_pathNEW/Challenger#5B1003
 
 
 # add QUIT.SYSTEM to drop to BitsyBye on boot
-cadius ADDFILE $image $prodos_vol "$A2binpath/QUIT.SYSTEM#FF2000"
+cadius ADDFILE $image $prodos_path "$A2binpath/QUIT.SYSTEM#FF2000"
 
 
 # compile video player & add it
 cd /Volumes/TRANSFER/play.vids.system/
-acme play.vids.system.a
-cadius ADDFILE $image $prodos_vol BASIS.SYSTEM#ff0000
+acme --outfile BASIS.SYSTEM#FF0000 play.vids.system.a
+cadius ADDFILE $image $prodos_path BASIS.SYSTEM#FF0000
 
 
 # add PRODOS to make it bootable
-cadius ADDFILE $image $prodos_vol "$A2binpath/PRODOS#FF0000"
+cadius ADDFILE $image $prodos_path "$A2binpath/PRODOS#FF0000"
 
 
 #cadius CHECKVOLUME $image

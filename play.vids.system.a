@@ -9,7 +9,7 @@ x
 ; Includes ProRWTS2 by Peter Ferrie AKA qkumba
 ; https://github.com/peterferrie/prorwts2
 
-; "acme play.vids.system.a" to assemble
+; "acme --outfile BASIS.SYSTEM#FF0000 play.vids.system.a" to assemble
 
 
 ; Playback Modes set in VidType:
@@ -44,7 +44,6 @@ x
 
 
 !cpu 6502
-!to "BASIS.SYSTEM#ff0000",plain
 ;!symbollist "BASIS.SYSTEM.list.txt"
 
 *=$2000
