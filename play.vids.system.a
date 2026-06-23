@@ -240,7 +240,9 @@ Relocated
 
          jsr   TestGS
          jsr   SetReset
+         jsr   EmuTest
          jsr   TestVBL    ; wait until v blank to change modes
+
          lda   #0
          sta   auxreq
 
@@ -263,7 +265,6 @@ SetupGR
          sta   ldrhi
          lda   #>kVidPageEORGR
          sta   LoadEOR    ; swap ldrhi between $400 & $800
-         jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
@@ -285,7 +286,6 @@ SetupHGR
          sta   ldrhi
          lda   #>kVidPageEORHGR
          sta   LoadEOR    ; swap ldrhi between $2000 & $4000
-         jsr   EmuTest
          jsr   hddopendir
          jmp   Play
 
@@ -300,8 +300,7 @@ SetupDHGR
          lda   #>kVidPageEORHGR
          sta   LoadEOR    ; fall through
 
-SetupAux jsr   EmuTest
-         sta   SS_Aux
+SetupAux sta   SS_Aux
          ldy   #0
 CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
          sta   reloc,y
@@ -365,11 +364,6 @@ Resume
 
 SetGrfx  jsr   Grfx       ; page loaded, switch graphics modes  **self-modified
 
-         ldx   EmuVar     ; target 10fps
--        jsr   TestVBL    ; sync next vertical blank period
-         dex
-         bpl   -
-
 PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
          lda   PageFlip+1
          eor   #1         ; flip between showing page 1 & 2
@@ -379,7 +373,13 @@ PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
          eor   LoadEOR    ; flip between loading to page 1 & 2
          sta   ldrhi
 
-ChkKey   lda   Keyboard
+FrameWait
+         ldx   EmuVar     ; target 10fps
+-        jsr   TestVBL    ; sync next vertical blank period
+         dex
+         bpl   -
+
+         lda   Keyboard
          bpl   Play       ; no key pressed
          jmp   Key
 
@@ -593,41 +593,47 @@ Exit3    jmp   Exit
 ; *                  Emulator-specific Routines                  *
 ; ****************************************************************
 
-EmuTest  ldx   #$FF       ; Test floating bus 255 times
-         lda   #0
-         sta   EmuVar     ; zero out count of positive tests
-Emu1     sta   SS_Float   ; tickle Sweet16
-         lda   SS_Float   ; load value from bus
-         cmp   #0         ; Virtual ][? (always returns $00)
-         beq   Emu3
-         cmp   #$16       ; Sweet16? (returns $16 when tickled, $30 otherwise)
-         beq   Emu3
-Emu2     dex              ; keep counting
-         cpx   #0
-         beq   Emu4       ; done with 255 tests yet?
-         jmp   Emu1       ; If not, keep going
-Emu3     inc   EmuVar     ; found potential emulator, increment count
-         jmp   Emu2
-Emu4     lda   EmuVar     ; load counts
-         cmp   #$FF       ; 255 tests of 255 runs positive for emulation?
-         beq   EmuFix     ; if yes, patch the code
+EmuTest
 
+; Sweet16?
+         ldx   #0         ; Test floating bus 256 times
+-        sta   SS_Float   ; tickle Sweet16
+         lda   SS_Float   ; load value from bus
+         cmp   #$16       ; Sweet16? (returns $16 when tickled, $30 otherwise)
+         bne   +          ; definitely not
+         dex              ; potentially yes, keep going for 256 tests
+         bne   -
+         jmp   EmuFix     ; yes, so patch code to avoid page flipping
++
+
+; Virtual ][?
+         ldx   #0         ; Test floating bus 256 times
+-        lda   SS_Float   ; load value from bus; Virtual ][ always returns $00
+         bne   +          ; definitely not
+         dex              ; potentially yes, keep going for 256 tests
+         bne   -
+         jmp   EmuTime    ; yes, adjust inter-frame VBL count
++
+
+; Not an emulator we care about, set default inter-frame VBL count
          lda   #4         ; assume real hardware has overhead
          sta   EmuVar     ; so wait less per frame
 
          rts
 
+; Patch page flipping routine to always load to and show page 1
 EmuFix   lda   #kOpcodeJMPabs
          sta   PageFlip
          lda   #<EmuProc  ; set branch from normal playback routine
          sta   PageFlip+1 ; during page flipping operations
          lda   #>EmuProc  ; (which some emulators can't display properly)
-         sta   PageFlip+2 ; to slightly revised EmuWait routine
+         sta   PageFlip+2 ; to slightly revised EmuProc routine
 
          lda   VidSize    ; first load to page 1
          sta   ldrhi
 
-         lda   #5         ; number of VBL to wait
+; Set inter-frame VBL count to account for lower loading overhead in emulators
+EmuTime  lda   #5         ; number of VBL to wait
          sta   EmuVar
 
          rts
@@ -636,7 +642,7 @@ EmuProc  bit   SS_Page1   ; always show Page 1
 
          lda   VidSize
          sta   ldrhi      ; always load to page 1
-         jmp   ChkKey     ; Resume playback using PLAY after keypress check
+         jmp   FrameWait  ; Resume playback
 
 
 ; ****************************************************************
