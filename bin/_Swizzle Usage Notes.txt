@@ -1,0 +1,6 @@
+
+chmod a+x swizzle_dgr.pl
+chmod a+x swizzle_dhgr.pl
+
+./swizzle_dgr.pl < INFILE#5b1002 > OUTFILE#5b1002
+./swizzle_dhgr.pl < INFILE#5b1004 > OUTFILE#5b1004
