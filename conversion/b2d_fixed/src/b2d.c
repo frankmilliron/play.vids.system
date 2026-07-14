@@ -2071,7 +2071,7 @@ int savelofragment() {
       /* followed by the interleaf (odd pixels)
          next 40 bytes goes to main memory */
       for (x = 0; x < 40; x++) {
-        temp = dhrgetpixel(x*2+1, y);
+        temp = dhrgetpixel(lores ? x : x*2+1, y);
         setlopixel(temp, x + 40, y, 1);
       }
     }
@@ -2159,7 +2159,7 @@ int savelofragment() {
     memset(hgrbuf, 0, LOBINSIZE);
     for (y = 0; y < 48; y++) {
       for (x = 0; x < 40; x++) {
-        temp = dhrgetpixel(x*2+1, y);
+        temp = dhrgetpixel(lores ? x : x*2+1, y);
         setlopixel(temp, x, y, 0);
       }
     }
