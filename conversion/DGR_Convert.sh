@@ -7,6 +7,14 @@
 # Input video can be downloaded from YouTube using the following website
 # https://v24.www-y2mate.com/
 
+# For the time being, b2d is currently broken for double-lores output.
+# I was able to 'fix' it with the following changes to b2d.c, which break the lores output:
+# line 290 - add "#include <ctype.h>"
+# line 2067 - change to "remap = dhrgetpixel(x*2, y);" (was "remap = dhrgetpixel(x, y);")
+# line 2074 - change to "temp = dhrgetpixel(x*2+1, y);" (was "temp = dhrgetpixel(x, y);")
+# line 2134 - change to "remap = dhrgetpixel(x*2, y);" (was "remap = dhrgetpixel(x, y);")
+# line 2162 - change to "temp = dhrgetpixel(x*2+1, y);" (was "temp = dhrgetpixel(x, y);")
+
 input="$1"
 
 rm -rf ~/Desktop/out2
