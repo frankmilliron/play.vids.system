@@ -25,7 +25,7 @@ rm ~/Desktop/VIDEO#5B1002
 
 find ~/Desktop/out2 -name "FRAME.*.DL*" | sort -V | while read -r f; do
   echo "Condensing Frame: $f"
-  cat "$f" >> "$HOME/Desktop/VIDEO#5b1002"  # NAPS - NuLib2 Attribute Preservation String
-  printf '\x00\x00\x00\x00\x00\x00\x00\x00' >> "$HOME/Desktop/VIDEO#5b1002"
+  cat "$f" >> "$HOME/Desktop/VIDEO#5B1002"  # NAPS - NuLib2 Attribute Preservation String
+  printf '\x00\x00\x00\x00\x00\x00\x00\x00' >> "$HOME/Desktop/VIDEO#5B1002"
   # pad last screen hole so frames align. b2d explicitly leaves this out of DL1 (Aux)/DL2(Main) files.
 done

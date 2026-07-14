@@ -25,7 +25,7 @@ rm ~/Desktop/VIDEO#5B1001
 
 find ~/Desktop/out1 -name "FRAME.*.SL2" | sort -V | while read -r f; do
   echo "Condensing Frame: $f"
-  cat "$f" >> "$HOME/Desktop/VIDEO#5b1001"  # NAPS - NuLib2 Attribute Preservation String
-  printf '\x00\x00\x00\x00\x00\x00\x00\x00' >> "$HOME/Desktop/VIDEO#5b1001"
+  cat "$f" >> "$HOME/Desktop/VIDEO#5B1001"  # NAPS - NuLib2 Attribute Preservation String
+  printf '\x00\x00\x00\x00\x00\x00\x00\x00' >> "$HOME/Desktop/VIDEO#5B1001"
   # pad last screen hole so frames align. b2d explicitly leaves this out of SL2 files.
 done

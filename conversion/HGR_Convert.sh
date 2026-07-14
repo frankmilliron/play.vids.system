@@ -21,9 +21,9 @@ find ~/Desktop/out3 -type f -print0 | sort -zf | while IFS= read -r -d '' f; do
   # D=Double Hires, D=Dither 9 (Buckels), V= ???
 done
 
-rm ~/Desktop/VIDEO#5b1003
+rm ~/Desktop/VIDEO#5B1003
 
 find ~/Desktop/out3 -name "FRAME.*.BIN" | sort -V | while read -r f; do
   echo "Condensing Frame: $f"
-  cat "$f" >> "$HOME/Desktop/VIDEO#5b1003"  # NAPS - NuLib2 Attribute Preservation String
+  cat "$f" >> "$HOME/Desktop/VIDEO#5B1003"  # NAPS - NuLib2 Attribute Preservation String
 done
