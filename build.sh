@@ -72,6 +72,10 @@ else
   add_video examples/COLORCYCLE.DGR#5B1002
   add_video examples/COLORCYCLE.HGR#5B1003
   add_video examples/COLORCYCLE.DHGR#5B1004
+  add_video examples/BLUEMONDAY.GR#5B1001
+  add_video examples/BLUEMONDAY.DGR#5B1002
+  add_video examples/BLUEMONDAY.HGR#5B1003
+  add_video examples/BLUEMONDAY.DHGR#5B1004
 fi
 
 cadius CHECKVOLUME $image
