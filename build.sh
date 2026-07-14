@@ -49,18 +49,6 @@ rm -f "$image"
 
 cadius CREATEVOLUME $image $prodos_vol 32MB
 
-# add PRODOS to make it bootable
-cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/PRODOS" $outpath
-cadius ADDFILE $image $prodos_path "$outpath/PRODOS#FF0000"
-
-# add QUIT.SYSTEM to drop to Bitsy Bye on boot
-cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/QUIT.SYSTEM" $outpath
-cadius ADDFILE $image $prodos_path "$outpath/QUIT.SYSTEM#FF2000"
-
-# assemble video player & add it
-acme --outfile $outpath/BASIS.SYSTEM#FF0000 --report $outpath/play.vids.system.listing play.vids.system.a
-cadius ADDFILE $image $prodos_path $outpath/BASIS.SYSTEM#FF0000
-
 # add videos
 if [ -f "add_videos.sh" ]; then
   # To build an image with specific videos, create a file named "add_videos.sh" with
@@ -77,6 +65,18 @@ else
   add_video examples/BLUEMONDAY.HGR#5B1003
   add_video examples/BLUEMONDAY.DHGR#5B1004
 fi
+
+# add QUIT.SYSTEM to drop to Bitsy Bye on boot
+cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/QUIT.SYSTEM" $outpath
+cadius ADDFILE $image $prodos_path "$outpath/QUIT.SYSTEM#FF2000"
+
+# assemble video player & add it
+acme --outfile $outpath/BASIS.SYSTEM#FF0000 --report $outpath/play.vids.system.listing play.vids.system.a
+cadius ADDFILE $image $prodos_path $outpath/BASIS.SYSTEM#FF0000
+
+# add PRODOS to make it bootable
+cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/PRODOS" $outpath
+cadius ADDFILE $image $prodos_path "$outpath/PRODOS#FF0000"
 
 cadius CHECKVOLUME $image
 $CADIUS CATALOG $image
