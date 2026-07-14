@@ -68,10 +68,10 @@ if [ -f "add_videos.sh" ]; then
   source "add_videos.sh"
 else
   # Test videos
-  add_video examples/GR#5B1001
-  add_video examples/DGR#5B1002
-  add_video examples/HGR#5B1003
-  add_video examples/DHGR#5B1004
+  add_video examples/COLORCYCLE.GR#5B1001
+  add_video examples/COLORCYCLE.DGR#5B1002
+  add_video examples/COLORCYCLE.HGR#5B1003
+  add_video examples/COLORCYCLE.DHGR#5B1004
 fi
 
 cadius CHECKVOLUME $image
