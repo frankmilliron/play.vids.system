@@ -550,7 +550,7 @@ IIc
 
         lda     SS_RdIOUDis
         pha                     ; save IOUDis state
-        sta     SS_IOUDisOff    ; turn IOUDis off
+        sta     SS_IOUDisOn     ; turn IOUDis on to allow controlling VBL interrupts
 
         lda     SS_RdVBlMsk
         pha                     ; save VBL state
