@@ -128,6 +128,8 @@ kKeyEscape     = $9B
 kKeySpace      = $A0
 kKeyDigit1     = $B1
 kKeyDigit2     = $B2
+kKeyUprV       = $D6
+kKeyLwrV       = $F6
 
 kFileTypeAnimation = $5B
 kAuxTypeSignature  = $10
@@ -453,12 +455,27 @@ Pause2   bit   KeyStrobe
 
 OneKey   cmp   #kKeyDigit1 ; "1" key pressed?
          bne   TwoKey
-         bit   SS_DblOff  ; turn off double graphics mode
+         bit   SS_DblOff   ; turn off double graphics mode
          jmp   Play
 
 TwoKey   cmp   #kKeyDigit2 ; "2" key pressed? ($32+80)
+         bne   VKey
+         bit   SS_DblOn    ; turn on double graphics mode
+         jmp   Play
+
+VKey     cmp   #kKeyUprV   ; "V" key pressed? ($32+80)
+         beq   TglVBL
+         cmp   #kKeyLwrV
+         beq   TglVBL
          bne   Esc
-         bit   SS_DblOn   ; turn on double graphics mode
+TglVBL   lda   TestVBL     ; toggle TestVBL active
+         cmp   #$AD        ; LDA abs
+         bne   +
+         lda   #$60        ; RTS
+         sta   TestVBL     ; patch TestVBL
+         jmp   Play
++        lda   #$AD        ; LDA abs
+         sta   TestVBL
          jmp   Play
 
 Esc      cmp   #kKeyEscape ; escape key pressed? ($1B+80)
