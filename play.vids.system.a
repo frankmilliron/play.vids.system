@@ -3,11 +3,13 @@ x
 
 ; Play video files in all graphics modes
 ; December 25, 2022
-; (c) 2022 by Frank Milliron, Lombard $oftware
+; (c) 2022-2026 by Frank Milliron, Lombard $oftware
 ; https://github.com/frankmilliron/play.vids.system
 
 ; Includes ProRWTS2 by Peter Ferrie AKA qkumba
 ; https://github.com/peterferrie/prorwts2
+
+; Includes code contributions from Josh Bell, maintainer of the fine Apple ][ Desktop
 
 ; "acme --outfile BASIS.SYSTEM#FF0000 play.vids.system.a" to assemble
 
@@ -34,11 +36,12 @@ x
 ; MAKE PLAYBACK WORK IN ALL MODES, ON ALL MACHINES, WITH ALL MASS STORAGE
 ; load lores and double-lores file natively (use b2d output, avoid screen holes)
 ;   "scanline oriented single file"
-; Compute file size on load (EOF tracking)
+; Compute file size on load (EOF/frame tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
 ; hangs on ][+ waiting for VBL
 ; text mode ascii animation?
+; interleaved audio??
 
 
 
@@ -231,7 +234,7 @@ Error    sta   KeyStrobe
          !word QuitParms
 
 QuitParms
-         !byte 4          ; 4 parameters
+         !byte 4          ; 4 parameters, of varying sizes
          !byte 0
          !word 0          ; none used
          !byte 0
@@ -751,7 +754,7 @@ Exit     jsr   TestVBL    ; wait until v blank to change modes
          !word ExitParms
 
 ExitParms
-         !byte 4          ; 4 parameters
+         !byte 4          ; 4 parameters, of varying sizes
          !byte 0
          !word 0          ; none used
          !byte 0
