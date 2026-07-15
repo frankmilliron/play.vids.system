@@ -738,7 +738,9 @@ SyncBuffer
 ; *                           Goodbye!                           *
 ; ****************************************************************
 
-Exit     jsr   TestVBL    ; wait until v blank to change modes
+Exit     jsr   saveslot   ; restore screen holes if lores was called
+
+         jsr   TestVBL    ; wait until v blank to change modes
 
          sta   KeyStrobe
          sta   SS_Main
