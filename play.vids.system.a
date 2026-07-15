@@ -530,7 +530,7 @@ GrfxDHGR sta   SS_80col
 ; *                       Vertical Blank                         *
 ; ****************************************************************
 
-TestVBL  lda   MACHID
+TestVBL  lda   MACHID     ; * self-modifying! (by TglVBL)
          and   #%11001000 ; bits 3, 6-7 give type
          cmp   #%01000000 ; Do we have a ][+?
          beq   IIplus     ; ][+ doesn't have VBL --- floating bus??
