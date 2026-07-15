@@ -181,16 +181,13 @@ GetAttributes
          !byte $C4        ; get file attributes
          !word C4_Parms
 
-         beq   FileType   ; check for error
-         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
-FileType lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
+         bne   Error
+         lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
          cmp   #kFileTypeAnimation
-         beq   AuxType
-         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
+         bne   Error
 AuxType  lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
          cmp   #kAuxTypeSignature
-         beq   SetType
-         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
+         bne   Error
 SetType  lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
          sta   VidType
 
@@ -219,6 +216,26 @@ Move     lda   Relocated,y
          bne   Move
 
          jmp   Reloc
+
+Error    sta   KeyStrobe
+         sta   SS_Main
+         sta   SS_40col
+         sta   SS_DblOff
+
+         jsr   ROM_Text
+         jsr   ROM_Home
+
+         inc   $3F4       ; invalidate reset vector
+         jsr   MLI
+         !byte $65        ; ProDOS QUIT
+         !word QuitParms
+
+QuitParms
+         !byte 4          ; 4 parameters
+         !byte 0
+         !word 0          ; none used
+         !byte 0
+         !word 0
 
 C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
          !byte   $0a      ; param_count
@@ -720,7 +737,7 @@ SyncBuffer
 
 Exit     jsr   TestVBL    ; wait until v blank to change modes
 
-Exit0    sta   KeyStrobe
+         sta   KeyStrobe
          sta   SS_Main
          sta   SS_40col
          sta   SS_DblOff
