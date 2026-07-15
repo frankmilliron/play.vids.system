@@ -453,13 +453,11 @@ Pause2   bit   KeyStrobe
 
 OneKey   cmp   #kKeyDigit1 ; "1" key pressed?
          bne   TwoKey
-         sta   SS_IOUDisOn  ; fix for //c
          bit   SS_DblOff  ; turn off double graphics mode
          jmp   Play
 
 TwoKey   cmp   #kKeyDigit2 ; "2" key pressed? ($32+80)
          bne   Esc
-         sta   SS_IOUDisOn  ; fix for //c
          bit   SS_DblOn   ; turn on double graphics mode
          jmp   Play
 
@@ -479,7 +477,6 @@ Grfx     lda   #kOpcodeBITabs
 
          sta   SS_Grfx
          sta   SS_Full
-         sta   SS_IOUDisOn  ; fix for //c
 
          lda   VidType    ; jump table instead???
          cmp   #kVidTypeGR
@@ -551,8 +548,6 @@ IIc
         ; $C07F then ENVBL accessed at $C05B in order to poll for
         ; $C019 on the IIc."
 
-        lda     SS_RdIOUDis
-        pha                     ; save IOUDis state
         sta     SS_IOUDisOff    ; turn IOUDis off
 
         lda     SS_RdVBlMsk
@@ -573,8 +568,7 @@ IIc
         bmi     +
         sta     SS_DisVBl
 +
-        pla                     ; restore IOUDis state
-        bmi     +
+        ; The IIc firmware normally leaves IOUDIS on.
         sta     SS_IOUDisOn
 +
         plp                     ; restore interrupt state
@@ -741,7 +735,7 @@ SyncBuffer
 ; *                           Goodbye!                           *
 ; ****************************************************************
 
-Exit     jsr   saveslot   ; restore screen holes if lores was called
+Exit     jsr   saveslot   ; restore screen holes if lores was called (ProRWTS)
 
          jsr   TestVBL    ; wait until v blank to change modes
 
