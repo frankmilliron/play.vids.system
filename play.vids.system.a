@@ -453,11 +453,13 @@ Pause2   bit   KeyStrobe
 
 OneKey   cmp   #kKeyDigit1 ; "1" key pressed?
          bne   TwoKey
+         sta   SS_IOUDisOn  ; fix for //c
          bit   SS_DblOff  ; turn off double graphics mode
          jmp   Play
 
 TwoKey   cmp   #kKeyDigit2 ; "2" key pressed? ($32+80)
          bne   Esc
+         sta   SS_IOUDisOn  ; fix for //c
          bit   SS_DblOn   ; turn on double graphics mode
          jmp   Play
 
@@ -477,6 +479,7 @@ Grfx     lda   #kOpcodeBITabs
 
          sta   SS_Grfx
          sta   SS_Full
+         sta   SS_IOUDisOn  ; fix for //c
 
          lda   VidType    ; jump table instead???
          cmp   #kVidTypeGR
