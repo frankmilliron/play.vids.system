@@ -181,14 +181,16 @@ GetAttributes
          !byte $C4        ; get file attributes
          !word C4_Parms
 
-         lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
+         beq   FileType   ; check for error
+         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
+FileType lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
          cmp   #kFileTypeAnimation
          beq   AuxType
-         jmp   Exit+Relocated-Reloc ; we haven't relocated yet
+         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
 AuxType  lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
          cmp   #kAuxTypeSignature
          beq   SetType
-         jmp   Exit+Relocated-Reloc ; we haven't relocated yet
+         jmp   Exit0+Relocated-Reloc ; we haven't relocated yet (+ skip VBL check)
 SetType  lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
          sta   VidType
 
@@ -718,7 +720,7 @@ SyncBuffer
 
 Exit     jsr   TestVBL    ; wait until v blank to change modes
 
-         sta   KeyStrobe
+Exit0    sta   KeyStrobe
          sta   SS_Main
          sta   SS_40col
          sta   SS_DblOff
