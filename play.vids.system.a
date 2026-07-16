@@ -34,8 +34,6 @@ x
 
 ; TODO:
 ; MAKE PLAYBACK WORK IN ALL MODES, ON ALL MACHINES, WITH ALL MASS STORAGE
-; load lores and double-lores file natively (use b2d output, avoid screen holes)
-;   "scanline oriented single file"
 ; Compute file size on load (EOF/frame tracking)
 ; Save //gs speed on load - set slow to play - restore on exit
 ; //gs text page 2 fix - detect if Alternate Screen Mode is on
