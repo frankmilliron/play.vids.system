@@ -1,0 +1,71 @@
+VBL            = $C019    ; vertical blank
+SS_RstVBl      = $C019    ; [IIc] See if VBlInt off (1); reset it
+SS_DisVBl      = $C05A    ; [IIc] If IOUDis off: Disable (mask) VBL interrupts
+SS_EnVBl       = $C05B    ; [IIc] If IOUDis off: Enable (allow) VBL interrupts
+SS_DblOn       = $C05E    ; turn on double graphics modes
+SS_DblOff      = $C05F    ; turn off double graphics modes
+SS_Ptrig       = $C070    ; reset paddle timer trigger; [IIc] reset VBlInt
+SS_RdIOUDis    = $C07E    ; [IIc] read IOUDis; trigger paddle timer; reset VBlInt (alt)
+SS_IOUDisOn    = $C07E    ; [IIc] write: disable $C058-$C05F IOU access
+SS_IOUDisOff   = $C07F    ; [IIc] write: enable $C058-$C05F IOU access
+
+
+TOTAL REPLAY:
+
+iWaitForVBL
+         sei              ; IIc is special
+         sta   SS_IOUDisOff      ; enable access to VBL register
+         sta   SS_EnVBl      ; enable VBL polling
+         sta   SS_IOUDisOn      ; disable access to VBL register
+WaitForVBL_iie            ; IIe/IIgs have a relatively sane VBL
+                          ; but it's reversed between the two
+                          ; so we default to IIe, and patch in
+                          ; the reverse case if it's a IIGS.
+patch_VBL_iic1
+-        lda   SS_RstVBl      ; $c019 bit 7 is sticky, reset it (SMC->#$70 for IIc)
+patch_VBL_iigs1
+patch_VBL_iic2
+         bpl   -
+-        bit   VBL
+patch_VBL_iic3
+patch_VBL_iigs2
+         bmi   -
+WaitForVBL_nop            ; II/II+ have no easy VBL
+         rts
+
+iUnwaitForVBL
+         lda   SS_Ptrig      ; $c019 bit 7 is sticky, reset it
+-        bit   VBL
+         bpl   -
+         sta   SS_IOUDisOff      ; enable access to VBL register
+         sta   SS_DisVBl      ; disable VBL polling
+         sta   SS_IOUDisOn      ; disable access to VBL register
+         cli
+         rts
+
+
+
+
+
+
+
+
+IIc notes from long ago:
+
+SEI
+STA SS_IOUDisOff
+STA SS_EnVBl
+STA SS_IOUDisOn
+CLI
+...
+BIT VBL
+BPL -
+LDA SS_Ptrig
+SEI
+STA SS_IOUDisOff
+STA SS_DisVBl
+STA SS_IOUDisOn
+CLI
+RTS
+
+
