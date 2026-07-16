@@ -361,7 +361,6 @@ SetupGR
          jmp   Play
 
 SetupDGR
-         jsr   RAMout               ; disconnect ProDOS /RAM drive since we need AUX mem
          lda   #>kVidSizeGR         ; $400 bytes at $400, two times per frame, AUX then Main
          sta   VidSize
          sta   sizehi
@@ -383,7 +382,6 @@ SetupHGR
          jmp   Play
 
 SetupDHGR
-         jsr   RAMout               ; disconnect ProDOS /RAM drive since we need AUX mem
          lda   #>kVidSizeHGR
          sta   VidSize              ; $2000 bytes at $2000, two times per frame, AUX then Main
          sta   sizehi
