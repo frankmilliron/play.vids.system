@@ -39,26 +39,26 @@ Build and install Cadius from https://github.com/mach-kernel/cadius
    ```
    cadius CREATEVOLUME vids.hdv VIDS 32MB
    ```
-2. Place `PRODOS` and `QUIT.SYSTEM` from [https://prodos8.com/](https://releases.prodos8.com/ProDOS_2_4_3.po) on the disk image:
-   ```
-   cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/PRODOS .
-   cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/QUIT.SYSTEM .
-   cadius ADDFILE vids.hdv PRODOS#FF0000
-   cadius ADDFILE vids.hdv QUIT.SYSTEM#FF0000
-   ```
-3. Place `BASIS.SYSTEM` on the disk image:
-   ```
-   cadius ADDFILE vids.hdv BASIS.SYSTEM#FF0000
-   ```
-4. Place video files on the disk image:
+2. Place video files on the disk image:
    ```
    cadius ADDFILE vids.hdv examples/DGR#5B1002
    cadius ADDFILE vids.hdv examples/DHGR#5B1004
    cadius ADDFILE vids.hdv examples/GR#5B1001
    cadius ADDFILE vids.hdv examples/HGR#5B1003
    ```
+3. Place `PRODOS` and `QUIT.SYSTEM` from [https://prodos8.com/](https://releases.prodos8.com/ProDOS_2_4_3.po) on the disk image:
+   ```
+   cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/PRODOS .
+   cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/QUIT.SYSTEM .
+   cadius ADDFILE vids.hdv PRODOS#FF0000
+   cadius ADDFILE vids.hdv QUIT.SYSTEM#FF0000
+   ```
+4. Place `BASIS.SYSTEM` on the disk image:
+   ```
+   cadius ADDFILE vids.hdv BASIS.SYSTEM#FF0000
+   ```
 
-Now when a user boots `vids.hdv` in an emulator, [Bitsy Bye](https://prodos8.com/bitsy-bye/) will present a menu of files. If the user selects a video file it will automatically play, and return to the menu when complete.
+Now when a user boots `vids.hdv` on real hardware, or in an emulator, [Bitsy Bye](https://prodos8.com/bitsy-bye/) will present a menu of files. If the user selects a video file it will automatically play, and return to the menu when complete.
 
 ## Keyboard Controls
 
