@@ -504,7 +504,7 @@ slot            ldx     $cfff
                 bcs     +
                 jmp     bankram
   } ;enable_floppy = 1
-
++
                 ldy     #$8c ;STY
   !if (rwts_mode + enable_write) > 1 {
                 sty     unrcommand1
