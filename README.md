@@ -66,5 +66,6 @@ Now when a user boots `vids.hdv` in an emulator, [Bitsy Bye](https://prodos8.com
 * <kbd>→</kbd> - Skip forwards several frames
 * <kbd>←</kbd> - Skip backwards several frames
 * <kbd>Esc</kbd> - Quit back to ProDOS
+* <kbd>V</kbd> or <kbd>v</kbd> - Toggles whether waiting for vertical blank (VBL) is active (default is on)
 
 The <kbd>1</kbd> and <kbd>2</kbd> keys can be used to force single/double resolution, although this is mainly for debugging.
