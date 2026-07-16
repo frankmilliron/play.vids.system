@@ -9,9 +9,3 @@ out/
 
 # Optional custom packaging script
 add_videos.sh
-
-examples/GR/
-examples/DGR/
-examples/HGR/
-examples/HGR_mono/
-examples/DHGR/
