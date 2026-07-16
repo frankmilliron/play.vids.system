@@ -63,6 +63,11 @@ VidSize        = $7A      ; set based on video type
 VidName        = $300     ; video file to play
 Reloc          = $C00     ; video player code relocated here
 MLI            = $BF00    ; ProDOS Machine Language Interface entry
+DEVADR         = $BF10    ; Device driver addresses
+NODEVR         = $BF10    ; "No Device" vector (S0D1)
+RAMSLOT        = $BF26    ; /RAM driver vector (S3D2)
+DEVCNT         = $BF31    ; Number of on-line devices minus 1
+DEVLST         = $BF32    ; List of on-line devices devices
 MACHID         = $BF98    ; ProDOS Machine Identification Byte
 
 Keyboard       = $C000    ; get keypress
@@ -188,11 +193,24 @@ GetAttributes
          lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
          cmp   #kFileTypeAnimation
          bne   Error
-AuxType  lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
+         lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
          cmp   #kAuxTypeSignature
          bne   Error
-SetType  lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
+         lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
          sta   VidType
+
+         ; Double resolution?
+         cmp   #kVidTypeGR
+         beq   +
+         cmp   #kVidTypeHGR
+         ; TODO: This disallows 64K IIe w/ 80col, which should support DGR
+         lda   MACHID     ; bits 6,7=10 = IIe/IIc/IIgs
+         and   #%11110000 ; bits 4,5=11 = 128K
+         cmp   #%10110000
+         bne   Error
+
+         jsr   RemoveRAM
++
 
 ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
 
@@ -252,6 +270,56 @@ C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
          !word   0        ; mod_time
          !word   0        ; create_date
          !word   0        ; create_time
+
+RemoveRAM
+         ; Find Slot 3 Drive 2 /RAM device
+         ldx   DEVCNT
+-        lda   DEVLST,x
+         and   #$F3       ; per ProDOS 8 Technical Reference Manual 5.2.2.3
+         cmp   #$B3       ; /RAM is one of $BF, $BB, $B7 or $B3
+         beq   +
+         dex
+         bpl   -
+         rts              ; not found
++
+         ; TODO: if we reconnect /RAM on exit, save DEVLST entry & DEVADR vector
+
+         ; Remove S3D2 driver vector in table
+         lda   DEVADR
+         sta   RAMSLOT
+         lda   DEVADR+1
+         sta   RAMSLOT+1
+
+         ; Shuffle remaining DEVLST entries down
+-
+         cpx   DEVCNT
+         beq   +
+         lda   DEVLST+1,x
+         sta   DEVLST,x
+         inx
+         bne   -          ; always
++
+         dec   DEVCNT
+
+         lda   DEVNUM
+         pha              ; save last used unit; needed for ProRWTS2
+
+         ; Issue ON_LINE after disconnecting it to erase VCB entry.
+         ; Technical Note: ProDOS #8: Dealing with /RAM
+         ; https://prodos8.com/docs/technote/08/
+         jsr   MLI
+         !byte $C5        ; ProDOS ON_LINE
+         !word OnLineParms
+         ; Expected to fail with $28 (Device not connected)
+
+         pla
+         sta   DEVNUM     ; restore last used unit; needed for ProRWTS2
+         rts
+
+OnLineParms               ; ON_LINE_INFO ($C5) Parameters
+         !byte   $02      ; param_count (2)
+         !byte   $B0      ; unit_num (S3D2)
+         !word   $800     ; data_buffer (16-byte buffer)
 
 
 ; ****************************************************************
