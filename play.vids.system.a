@@ -54,76 +54,77 @@ x
 ; *                           Constants                          *
 ; ****************************************************************
 
-EmuVar         = $76      ; used for emulator test & playback
-HGR_Page       = $77      ; used by ROM graphics clear routine
-LoadEOR        = $78      ; switch between loading to page 1 or 2
-VidType        = $79      ; picked up from GET_FILE_ATTRIBUTES
-VidSize        = $7A      ; set based on video type
+EmuVar         = $76                ; used for emulator test & playback
+HGR_Page       = $77                ; used by ROM graphics clear routine
+LoadEOR        = $78                ; switch between loading to page 1 or 2
+VidType        = $79                ; picked up from GET_FILE_ATTRIBUTES
+VidSize        = $7A                ; set based on video type
 
-VidName        = $300     ; video file to play
-Reloc          = $C00     ; video player code relocated here
-MLI            = $BF00    ; ProDOS Machine Language Interface entry
-DEVADR         = $BF10    ; Device driver addresses
-NODEVR         = $BF10    ; "No Device" vector (S0D1)
-RAMSLOT        = $BF26    ; /RAM driver vector (S3D2)
-DEVCNT         = $BF31    ; Number of on-line devices minus 1
-DEVLST         = $BF32    ; List of on-line devices devices
-MACHID         = $BF98    ; ProDOS Machine Identification Byte
+VidName        = $300               ; video file to play
+Reloc          = $C00               ; video player code relocated here
 
-Keyboard       = $C000    ; get keypress
-KeyStrobe      = $C010    ; clear keyboard strobe
-VBL            = $C019    ; vertical blank
-SS_RstVBl      = $C019    ; [IIc] See if VBlInt off (1); reset it
-SS_RdMain      = $C002    ; read from main mem
-SS_RdAux       = $C003    ; read from aux mem
-SS_Main        = $C004    ; write to main mem
-SS_Aux         = $C005    ; write to aux mem
-SS_40col       = $C00C    ; set 40-column mode
-SS_80col       = $C00D    ; set 80-column mode
-SS_Border      = $C034    ; set //gs border color
-SS_Speed       = $C036    ; set //gs processor speed
-SS_RdVBlMsk    = $C041    ; [IIc] See if VBL mask set
-SS_Float       = $C04F    ; test for floating bus
-SS_Grfx        = $C050    ; graphics mode
-SS_Full        = $C052    ; full-screen mode
-SS_Page1       = $C054    ; show graphics page 1
-SS_Page2       = $C055    ; show graphics page 2
-SS_Lores       = $C056    ; turn on lores graphics
-SS_Hires       = $C057    ; turn on hires graphics
-SS_DisVBl      = $C05A    ; [IIc] If IOUDis off: Disable (mask) VBL interrupts
-SS_EnVBl       = $C05B    ; [IIc] If IOUDis off: Enable (allow) VBL interrupts
-SS_DblOn       = $C05E    ; turn on double graphics modes
-SS_DblOff      = $C05F    ; turn off double graphics modes
-SS_RdIOUDis    = $C07E    ; [IIc] read IOUDis; trigger paddle timer; reset VBlInt
-SS_IOUDisOn    = $C07E    ; [IIc] write: disable $C058-$C05F IOU access
-SS_IOUDisOff   = $C07F    ; [IIc] write: enable $C058-$C05F IOU access
+MLI            = $BF00              ; ProDOS Machine Language Interface entry
+DEVADR         = $BF10              ; Device driver addresses
+NODEVR         = $BF10              ; "No Device" vector (S0D1)
+RAMSLOT        = $BF26              ; /RAM driver vector (S3D2)
+DEVCNT         = $BF31              ; Number of on-line devices minus 1
+DEVLST         = $BF32              ; List of on-line devices devices
+MACHID         = $BF98              ; ProDOS Machine Identification Byte
 
-ROM_Text2Copy  = $F962    ; turn on alternate display mode on //gs
-ROM_Home       = $FC58    ; clear text screen 1
-ROM_Text       = $FB2F    ; exit graphics mode
-ROM_Pwrup      = $FB6F    ; set reset vector checksum
-ROM_Wait       = $FCA8    ; not critical, only used for VBL check on //gs
-ROM_TestGS     = $FE1F    ; test for //gs
+Keyboard       = $C000              ; get keypress
+KeyStrobe      = $C010              ; clear keyboard strobe
+VBL            = $C019              ; vertical blank
+SS_RstVBl      = $C019              ; [IIc] See if VBlInt off (1); reset it
+SS_RdMain      = $C002              ; read from main mem
+SS_RdAux       = $C003              ; read from aux mem
+SS_Main        = $C004              ; write to main mem
+SS_Aux         = $C005              ; write to aux mem
+SS_40col       = $C00C              ; set 40-column mode
+SS_80col       = $C00D              ; set 80-column mode
+SS_Border      = $C034              ; set //gs border color
+SS_Speed       = $C036              ; set //gs processor speed
+SS_RdVBlMsk    = $C041              ; [IIc] See if VBL mask set
+SS_Float       = $C04F              ; test for floating bus
+SS_Grfx        = $C050              ; graphics mode
+SS_Full        = $C052              ; full-screen mode
+SS_Page1       = $C054              ; show graphics page 1
+SS_Page2       = $C055              ; show graphics page 2
+SS_Lores       = $C056              ; turn on lores graphics
+SS_Hires       = $C057              ; turn on hires graphics
+SS_DisVBl      = $C05A              ; [IIc] If IOUDis off: Disable (mask) VBL interrupts
+SS_EnVBl       = $C05B              ; [IIc] If IOUDis off: Enable (allow) VBL interrupts
+SS_DblOn       = $C05E              ; turn on double graphics modes
+SS_DblOff      = $C05F              ; turn off double graphics modes
+SS_RdIOUDis    = $C07E              ; [IIc] read IOUDis; trigger paddle timer; reset VBlInt
+SS_IOUDisOn    = $C07E              ; [IIc] write: disable $C058-$C05F IOU access
+SS_IOUDisOff   = $C07F              ; [IIc] write: enable $C058-$C05F IOU access
+
+ROM_Text2Copy  = $F962              ; turn on alternate display mode on //gs
+ROM_Home       = $FC58              ; clear text screen 1
+ROM_Text       = $FB2F              ; exit graphics mode
+ROM_Pwrup      = $FB6F              ; set reset vector checksum
+ROM_Wait       = $FCA8              ; not critical, only used for VBL check on //gs
+ROM_TestGS     = $FE1F              ; test for //gs
 
 ;ProRWTS2-specific:
-auxreq         = $51      ; set to 1 to read to aux memory
-sizelo         = $52      ; size of data to load
-sizehi         = $53      ; size of data to load
-reqcmd         = $54      ; set to 1 for cmdread
-ldrlo          = $55      ; address to load the data
-ldrhi          = $56      ; address to load the data
-namlo          = $57      ; name of file to access
-namhi          = $58      ; name of file to access
-treeidx        = $5B      ; tree index
-blkidx         = $5F      ; block index
+auxreq         = $51                ; set to 1 to read to aux memory
+sizelo         = $52                ; size of data to load
+sizehi         = $53                ; size of data to load
+reqcmd         = $54                ; set to 1 for cmdread
+ldrlo          = $55                ; address to load the data
+ldrhi          = $56                ; address to load the data
+namlo          = $57                ; name of file to access
+namhi          = $58                ; name of file to access
+treeidx        = $5B                ; tree index
+blkidx         = $5F                ; block index
 
-A1L            = $3C      ; MOVE/AUXMOVE: Source start, low-order byte
-A1H            = $3D      ; MOVE/AUXMOVE: Source start, high-order byte
-A2L            = $3E      ; MOVE/AUXMOVE: Source end, low-order byte
-A2H            = $3F      ; MOVE/AUXMOVE: Source end, high-order byte
-A4L            = $42      ; MOVE/AUXMOVE: Destination start, low-order byte
-A4H            = $43      ; MOVE/AUXMOVE: Destination start, high-order byte
-ROM_AUXMOVE    = $C311    ; [IIe/IIc/IIgs]
+A1L            = $3C                ; MOVE/AUXMOVE: Source start, low-order byte
+A1H            = $3D                ; MOVE/AUXMOVE: Source start, high-order byte
+A2L            = $3E                ; MOVE/AUXMOVE: Source end, low-order byte
+A2H            = $3F                ; MOVE/AUXMOVE: Source end, high-order byte
+A4L            = $42                ; MOVE/AUXMOVE: Destination start, low-order byte
+A4H            = $43                ; MOVE/AUXMOVE: Destination start, high-order byte
+ROM_AUXMOVE    = $C311              ; [IIe/IIc/IIgs]
 
 kKeyLeftArrow  = $88
 kKeyRightArrow = $95
@@ -145,8 +146,8 @@ kVidSizeGR     = $400
 kVidSizeHGR    = $2000
 kVidPage2GR    = $800
 kVidPage2HGR   = $4000
-kVidPageEORGR  = $0C00      ; XOR to alternate $400/$800
-kVidPageEORHGR = $6000      ; XOR to alternate $2000/$4000
+kVidPageEORGR  = $0C00              ; XOR to alternate $400/$800
+kVidPageEORHGR = $6000              ; XOR to alternate $2000/$4000
 
 kOpcodeBITabs  = $2C
 kOpcodeJMPabs  = $4C
@@ -166,37 +167,37 @@ kOpcodeBPL     = $10
 
          jmp   BASIS
 
-         !hex  EE EE      ; signifies launchable prodos file
-         !byte $41        ; prodos path buffer length (65 bytes)
-         !fill 65,0       ; prodos full path buffer
+         !hex  EE EE                ; signifies launchable prodos file
+         !byte $41                  ; prodos path buffer length (65 bytes)
+         !fill 65,0                 ; prodos full path buffer
 
-BASIS                     ; *=$2047
-         sta   KeyStrobe  ; clear stray keypresses
+BASIS                               ; *=$2047
+         sta   KeyStrobe            ; clear stray keypresses
 
 MoveFilename
-         ldy   $2006      ; copy filename from BASIS buffer
+         ldy   $2006                ; copy filename from BASIS buffer
 -        lda   $2006,y
-         and   #$7F       ; strip high bit
-         cmp   #$60       ; in lowercase range?
-         bcc   ++         ; no, leave it alone
-         and   #$DF       ; yes, make uppercase
+         and   #$7F                 ; strip high bit
+         cmp   #$60                 ; in lowercase range?
+         bcc   ++                   ; no, leave it alone
+         and   #$DF                 ; yes, make uppercase
 ++       sta   VidName,y
          dey
          bpl   -
 
 GetAttributes
          jsr   MLI
-         !byte $C4        ; get file attributes
+         !byte $C4                  ; get file attributes
          !word C4_Parms
 
          bne   Error
-         lda   C4_Parms+4 ; file_type must be $5B (ANM) "Animation"
+         lda   C4_Parms+4           ; file_type must be $5B (ANM) "Animation"
          cmp   #kFileTypeAnimation
          bne   Error
-         lda   C4_Parms+6 ; high byte of aux_type must be $10 ($10xx)
+         lda   C4_Parms+6           ; high byte of aux_type must be $10 ($10xx)
          cmp   #kAuxTypeSignature
          bne   Error
-         lda   C4_Parms+5 ; low byte of aux_type is video type (see table)
+         lda   C4_Parms+5           ; low byte of aux_type is video type (see table)
          sta   VidType
 
          ; Double resolution?
@@ -212,14 +213,14 @@ GetAttributes
          jsr   RemoveRAM
 +
 
-ProRWTS2 jsr   init       ; sets up ProRWTS2, relocates itself to $1000
+ProRWTS2 jsr   init                 ; sets up ProRWTS2, relocates itself to $1000
 
-         lda   #>VidName  ; set filename
+         lda   #>VidName            ; set filename
          sta   namhi
          lda   #<VidName
          sta   namlo
 
-         ldx   #1         ; cmdread
+         ldx   #1                   ; cmdread
          stx   reqcmd
          dex 
          stx   ldrlo
@@ -246,41 +247,41 @@ Error    sta   KeyStrobe
          jsr   ROM_Text
          jsr   ROM_Home
 
-         inc   $3F4       ; invalidate reset vector
+         inc   $3F4                 ; invalidate reset vector
          jsr   MLI
-         !byte $65        ; ProDOS QUIT
+         !byte $65                  ; ProDOS QUIT
          !word QuitParms
 
 QuitParms
-         !byte 4          ; 4 parameters, of varying sizes
+         !byte 4                    ; 4 parameters, of varying sizes
          !byte 0
-         !word 0          ; none used
+         !word 0                    ; none used
          !byte 0
          !word 0
 
-C4_Parms                  ; GET_FILE_INFO ($C4) Parameters
-         !byte   $0a      ; param_count
-         !word   VidName  ; pathname
-         !byte   0        ; access
-         !byte   0        ; file_type
-         !word   0        ; aux_type
-         !byte   0        ; storage_type
-         !word   0        ; blocks_used
-         !word   0        ; mod_date
-         !word   0        ; mod_time
-         !word   0        ; create_date
-         !word   0        ; create_time
+C4_Parms                            ; GET_FILE_INFO ($C4) Parameters
+         !byte   $0a                ; param_count
+         !word   VidName            ; pathname
+         !byte   0                  ; access
+         !byte   0                  ; file_type
+         !word   0                  ; aux_type
+         !byte   0                  ; storage_type
+         !word   0                  ; blocks_used
+         !word   0                  ; mod_date
+         !word   0                  ; mod_time
+         !word   0                  ; create_date
+         !word   0                  ; create_time
 
 RemoveRAM
          ; Find Slot 3 Drive 2 /RAM device
          ldx   DEVCNT
 -        lda   DEVLST,x
-         and   #$F3       ; per ProDOS 8 Technical Reference Manual 5.2.2.3
-         cmp   #$B3       ; /RAM is one of $BF, $BB, $B7 or $B3
+         and   #$F3                 ; per ProDOS 8 Technical Reference Manual 5.2.2.3
+         cmp   #$B3                 ; /RAM is one of $BF, $BB, $B7 or $B3
          beq   +
          dex
          bpl   -
-         rts              ; not found
+         rts                        ; not found
 +
          ; TODO: if we reconnect /RAM on exit, save DEVLST entry & DEVADR vector
 
@@ -297,29 +298,29 @@ RemoveRAM
          lda   DEVLST+1,x
          sta   DEVLST,x
          inx
-         bne   -          ; always
+         bne   -                    ; always
 +
          dec   DEVCNT
 
          lda   DEVNUM
-         pha              ; save last used unit; needed for ProRWTS2
+         pha                        ; save last used unit; needed for ProRWTS2
 
          ; Issue ON_LINE after disconnecting it to erase VCB entry.
          ; Technical Note: ProDOS #8: Dealing with /RAM
          ; https://prodos8.com/docs/technote/08/
          jsr   MLI
-         !byte $C5        ; ProDOS ON_LINE
+         !byte $C5                  ; ProDOS ON_LINE
          !word OnLineParms
          ; Expected to fail with $28 (Device not connected)
 
          pla
-         sta   DEVNUM     ; restore last used unit; needed for ProRWTS2
+         sta   DEVNUM               ; restore last used unit; needed for ProRWTS2
          rts
 
-OnLineParms               ; ON_LINE_INFO ($C5) Parameters
-         !byte   $02      ; param_count (2)
-         !byte   $B0      ; unit_num (S3D2)
-         !word   $800     ; data_buffer (16-byte buffer)
+OnLineParms                         ; ON_LINE_INFO ($C5) Parameters
+         !byte   $02                ; param_count (2)
+         !byte   $B0                ; unit_num (S3D2)
+         !word   $800               ; data_buffer (16-byte buffer)
 
 
 ; ****************************************************************
@@ -332,12 +333,12 @@ Relocated
          jsr   TestGS
          jsr   SetReset
          jsr   EmuTest
-         jsr   TestVBL    ; wait until v blank to change modes
+         jsr   TestVBL              ; wait until v blank to change modes
 
          lda   #0
          sta   auxreq
 
-         lda   VidType    ; jump table?
+         lda   VidType              ; jump table?
          cmp   #kVidTypeGR
          beq   SetupGR
          cmp   #kVidTypeDGR
@@ -349,58 +350,60 @@ Relocated
          jmp   Exit
 
 SetupGR
-         lda   #>kVidSizeGR ; $400 bytes at $400
+         lda   #>kVidSizeGR         ; $400 bytes at $400
          sta   VidSize
          sta   sizehi
-         lda   #>kVidPage2GR ; first load to page 2
+         lda   #>kVidPage2GR        ; first load to page 2
          sta   ldrhi
          lda   #>kVidPageEORGR
-         sta   LoadEOR    ; swap ldrhi between $400 & $800
+         sta   LoadEOR              ; swap ldrhi between $400 & $800
          jsr   hddopendir
          jmp   Play
 
 SetupDGR
-         lda   #>kVidSizeGR ; $400 bytes at $400, two times per frame, AUX then Main
+         jsr   RAMout               ; disconnect ProDOS /RAM drive since we need AUX mem
+         lda   #>kVidSizeGR         ; $400 bytes at $400, two times per frame, AUX then Main
          sta   VidSize
          sta   sizehi
-         lda   #>kVidPage2GR ; first load to page 2
+         lda   #>kVidPage2GR        ; first load to page 2
          sta   ldrhi
-         lda   #>kVidPageEORGR ; swap ldrhi between $400 & $800
+         lda   #>kVidPageEORGR      ; swap ldrhi between $400 & $800
          sta   LoadEOR
          jmp   SetupAux
 
 SetupHGR
          lda   #>kVidSizeHGR
-         sta   VidSize    ; $2000 bytes at $2000
+         sta   VidSize              ; $2000 bytes at $2000
          sta   sizehi
-         lda   #>kVidPage2HGR ; first load to page 2
+         lda   #>kVidPage2HGR       ; first load to page 2
          sta   ldrhi
          lda   #>kVidPageEORHGR
-         sta   LoadEOR    ; swap ldrhi between $2000 & $4000
+         sta   LoadEOR              ; swap ldrhi between $2000 & $4000
          jsr   hddopendir
          jmp   Play
 
 SetupDHGR
+         jsr   RAMout               ; disconnect ProDOS /RAM drive since we need AUX mem
          lda   #>kVidSizeHGR
-         sta   VidSize    ; $2000 bytes at $2000, two times per frame, AUX then Main
+         sta   VidSize              ; $2000 bytes at $2000, two times per frame, AUX then Main
          sta   sizehi
-         lda   #>kVidPage2HGR ; first load to page 2
+         lda   #>kVidPage2HGR       ; first load to page 2
          sta   ldrhi
          lda   #$10
-         sta   BlkIndex+1 ; has to be larger for DHGR ???
+         sta   BlkIndex+1           ; has to be larger for DHGR ???
          lda   #>kVidPageEORHGR
-         sta   LoadEOR    ; fall through
+         sta   LoadEOR              ; fall through
 
 SetupAux sta   SS_Aux
          ldy   #0
-CopyPro  lda   reloc,y    ; copy ProRWTS2 to AUX
+CopyPro  lda   reloc,y              ; copy ProRWTS2 to AUX
          sta   reloc,y
          lda   reloc+$100,y
          sta   reloc+$100,y
 ; NOTE: If `three_pages` defined in ProRWTS2 code, copy reloc+$200 too
-         lda   VidName,y  ; it needs the pathname
+         lda   VidName,y            ; it needs the pathname
          sta   VidName,y
-         lda   HackAux,y  ; and we need to call it from aux
+         lda   HackAux,y            ; and we need to call it from aux
          sta   HackAux,y
          iny
          bne   CopyPro
@@ -423,61 +426,61 @@ HackAux                             ; mirrored to aux for the open/read
          clc   ; aux>main
          jsr   SyncBuffer
 
-         jmp   Resume              ; hddopendir read the first half
+         jmp   Resume               ; hddopendir read the first half
 
 ; ****************************************************************
 ; *                    Main Playback Routine                     *
 ; ****************************************************************
 
 Play
-         lda   VidType    ; single or double load?
+         lda   VidType              ; single or double load?
          cmp   #kVidTypeGR
          beq   Resume
          cmp   #kVidTypeHGR
          beq   Resume
 
          lda   #1
-         sta   auxreq     ; first half of frame loaded to aux first
+         sta   auxreq               ; first half of frame loaded to aux first
          lda   VidSize
-         sta   sizehi     ; refresh on each load
-         clc              ; ProRWTS2 assumes this (or may exit on sparse blocks)
+         sta   sizehi               ; refresh on each load
+         clc                        ; ProRWTS2 assumes this (or may exit on sparse blocks)
          jsr   hddrdwrpart
-         bcs   Exit1      ; quit at end of file  <----Fix
+         bcs   Exit1                ; quit at end of file  <----Fix
 
          lda   blkidx
-BlkIndex cmp   #2         ; watch for 64kb wrap-around
+BlkIndex cmp   #2                   ; watch for 64kb wrap-around
          bne   Resume
 
-         clc   ; aux>main
+         clc                        ; aux>main
          jsr   SyncBuffer
 
 Resume
-         lda   #0         ; set load to main
+         lda   #0                   ; set load to main
          sta   auxreq
          lda   VidSize
-         sta   sizehi     ; refresh on each load
-         clc              ; ProRWTS2 assumes this (or may exit on sparse blocks)
+         sta   sizehi               ; refresh on each load
+         clc                        ; ProRWTS2 assumes this (or may exit on sparse blocks)
          jsr   hddrdwrpart
          bcs   Exit1
 
-         ldx   EmuVar     ; target 10fps
--        jsr   TestVBL    ; sync next vertical blank period
+         ldx   EmuVar               ; target 10fps
+-        jsr   TestVBL              ; sync next vertical blank period
          dex
          bpl   -
 
-SetGrfx  jsr   Grfx       ; page loaded, switch graphics modes  **self-modified
+SetGrfx  jsr   Grfx                 ; page loaded, switch graphics modes  **self-modified
 
-PageFlip bit   SS_Page2   ; start showing page 2  **self-modified
+PageFlip bit   SS_Page2             ; start showing page 2  **self-modified
          lda   PageFlip+1
-         eor   #1         ; flip between showing page 1 & 2
+         eor   #1                   ; flip between showing page 1 & 2
          sta   PageFlip+1
 
          lda   ldrhi
-         eor   LoadEOR    ; flip between loading to page 1 & 2
+         eor   LoadEOR              ; flip between loading to page 1 & 2
          sta   ldrhi
 
 ChkKey   lda   Keyboard
-         bpl   Play       ; no key pressed
+         bpl   Play                 ; no key pressed
          jmp   Key
 
 Exit1    jmp   Exit
@@ -491,26 +494,26 @@ Exit1    jmp   Exit
 
 Key      sta   KeyStrobe
 
-Rew      cmp   #kKeyLeftArrow ; left arrow key pressed?
+Rew      cmp   #kKeyLeftArrow       ; left arrow key pressed?
          bne   FastFor
          ldx   treeidx
-         beq   Play       ; if treeidx is already 0 don't rewind
+         beq   Play                 ; if treeidx is already 0 don't rewind
          dex
-         beq   Rew1       ; if it's 1, decrement 1
-         dex              ; otherwise decrement 2
+         beq   Rew1                 ; if it's 1, decrement 1
+         dex                        ; otherwise decrement 2
 Rew1     stx   treeidx
-         jmp   DoReset1   ; restart playback using reset routine
+         jmp   DoReset1             ; restart playback using reset routine
 
-FastFor  cmp   #kKeyRightArrow ; right arrow key pressed?
+FastFor  cmp   #kKeyRightArrow      ; right arrow key pressed?
          bne   Pause
          inc   treeidx
          jmp   DoReset1
 
-Pause    cmp   #kKeySpace ; space bar pressed?
+Pause    cmp   #kKeySpace           ; space bar pressed?
          bne   OneKey
 Pause1   lda   Keyboard
-         bpl   Pause1     ; test for second keypress
-         cmp   #kKeyEscape ; escape key pressed?
+         bpl   Pause1               ; test for second keypress
+         cmp   #kKeyEscape          ; escape key pressed?
          beq   Exit2
          cmp   #kKeySpace
          beq   Pause2
@@ -519,32 +522,32 @@ Pause1   lda   Keyboard
 Pause2   bit   KeyStrobe
          jmp   Play
 
-OneKey   cmp   #kKeyDigit1 ; "1" key pressed?
+OneKey   cmp   #kKeyDigit1          ; "1" key pressed?
          bne   TwoKey
-         bit   SS_DblOff   ; turn off double graphics mode
+         bit   SS_DblOff            ; turn off double graphics mode
          jmp   Play
 
-TwoKey   cmp   #kKeyDigit2 ; "2" key pressed? ($32+80)
+TwoKey   cmp   #kKeyDigit2          ; "2" key pressed? ($32+80)
          bne   VKey
-         bit   SS_DblOn    ; turn on double graphics mode
+         bit   SS_DblOn             ; turn on double graphics mode
          jmp   Play
 
-VKey     cmp   #kKeyUprV   ; "V" key pressed? ($32+80)
+VKey     cmp   #kKeyUprV            ; "V" key pressed? ($32+80)
          beq   TglVBL
          cmp   #kKeyLwrV
          beq   TglVBL
          bne   Esc
-TglVBL   lda   TestVBL     ; toggle TestVBL active
-         cmp   #$AD        ; LDA abs
+TglVBL   lda   TestVBL              ; toggle TestVBL active
+         cmp   #$AD                 ; LDA abs
          bne   +
-         lda   #$60        ; RTS
-         sta   TestVBL     ; patch TestVBL
+         lda   #$60                 ; RTS
+         sta   TestVBL              ; patch TestVBL
          jmp   Play
-+        lda   #$AD        ; LDA abs
++        lda   #$AD                 ; LDA abs
          sta   TestVBL
          jmp   Play
 
-Esc      cmp   #kKeyEscape ; escape key pressed? ($1B+80)
+Esc      cmp   #kKeyEscape          ; escape key pressed? ($1B+80)
          beq   Exit2
          jmp   Play
 
@@ -556,12 +559,12 @@ Exit2    jmp   Exit
 ; ****************************************************************
 
 Grfx     lda   #kOpcodeBITabs
-         sta   SetGrfx    ; only need to call once
+         sta   SetGrfx              ; only need to call once
 
          sta   SS_Grfx
          sta   SS_Full
 
-         lda   VidType    ; jump table instead???
+         lda   VidType              ; jump table instead???
          cmp   #kVidTypeGR
          beq   GrfxGR
          cmp   #kVidTypeDGR
@@ -596,17 +599,17 @@ GrfxDHGR sta   SS_80col
 ; *                       Vertical Blank                         *
 ; ****************************************************************
 
-TestVBL  lda   MACHID     ; * self-modifying! (by TglVBL)
-         and   #%11001000 ; bits 3, 6-7 give type
-         cmp   #%01000000 ; Do we have a ][+?
-         beq   IIplus     ; ][+ doesn't have VBL --- floating bus??
-         cmp   #%10001000 ; Do we have a //c?
+TestVBL  lda   MACHID               ; * self-modifying! (by TglVBL)
+         and   #%11001000           ; bits 3, 6-7 give type
+         cmp   #%01000000           ; Do we have a ][+?
+         beq   IIplus               ; ][+ doesn't have VBL --- floating bus??
+         cmp   #%10001000           ; Do we have a //c?
          beq   IIc
 
 ; IIe and IIgs (the latter is patched to swap BPL/BMI since sense is inverted)
          php
          sei
-VBLon    bit   VBL        ; Wait for full vertical blank (every 1/60th sec)
+VBLon    bit   VBL                  ; Wait for full vertical blank (every 1/60th sec)
          bpl   VBLon
 VBLoff   bit   VBL
          bmi   VBLoff
@@ -614,7 +617,7 @@ VBLoff   bit   VBL
 
 NoVBL    rts
 
-IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+   --message?
+IIplus   lda   VidType              ; we can't play DGR or DHGR on ][+   --message?
          cmp   #kVidTypeDGR
          beq   Exit2
          cmp   #kVidTypeDHGR
@@ -624,38 +627,38 @@ IIplus   lda   VidType    ; we can't play DGR or DHGR on ][+   --message?
 ; See Apple IIc Tech Note #9: Detecting VBL
 ; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.9.html
 IIc
-        php                     ; save interrupt state
-        sei                     ; disable interrupts
+         php                        ; save interrupt state
+         sei                        ; disable interrupts
 
-        ; "Note that IOUDis must have been turned off by writing to
-        ; $C07F then ENVBL accessed at $C05B in order to poll for
-        ; $C019 on the IIc."
+         ; "Note that IOUDis must have been turned off by writing to
+         ; $C07F then ENVBL accessed at $C05B in order to poll for
+         ; $C019 on the IIc."
 
-        sta     SS_IOUDisOff    ; turn IOUDis off
+         sta     SS_IOUDisOff       ; turn IOUDis off
 
-        lda     SS_RdVBlMsk
-        pha                     ; save VBL state
-        sta     SS_EnVBl        ; enable VBL polling
+         lda     SS_RdVBlMsk
+         pha                        ; save VBL state
+         sta     SS_EnVBl           ; enable VBL polling
 
-        ; "After reading $C019 once the high bit has been set to flag
-        ; VBL, the high bit remains set. A program polling VBL at
-        ; $C019 would have to access either PTrig at $C070 or
-        ; RdIOUDis at $C07E to reset the high-bit for $C019."
+         ; "After reading $C019 once the high bit has been set to flag
+         ; VBL, the high bit remains set. A program polling VBL at
+         ; $C019 would have to access either PTrig at $C070 or
+         ; RdIOUDis at $C07E to reset the high-bit for $C019."
 
-        bit     SS_RdIOUDis
+         bit     SS_RdIOUDis
 
--       bit     SS_RstVBl       ; poll
-        bpl     -
+-        bit     SS_RstVBl          ; poll
+         bpl     -
 
-        pla                     ; restore VBL state
-        bmi     +
-        sta     SS_DisVBl
+         pla                        ; restore VBL state
+         bmi     +
+         sta     SS_DisVBl
 +
-        ; The IIc firmware normally leaves IOUDIS on.
-        sta     SS_IOUDisOn
+         ; The IIc firmware normally leaves IOUDIS on.
+         sta     SS_IOUDisOn
 +
-        plp                     ; restore interrupt state
-        rts
+         plp                        ; restore interrupt state
+         rts
 
 ; ****************************************************************
 ; *                    Control-Reset Handler                     *
@@ -665,18 +668,18 @@ SetReset lda   #<DoReset
          sta   $3F2
          lda   #>DoReset
          sta   $3F3
-         jsr   ROM_Pwrup  ; set checksum
+         jsr   ROM_Pwrup            ; set checksum
          rts
 
 DoReset  sta   KeyStrobe
-         jsr   TestGS     ; re-setup //gs border color & speed
+         jsr   TestGS               ; re-setup //gs border color & speed
          jsr   Grfx
          lda   treeidx
-         beq   DoReset1   ; already at the beginning, don't adjust
-         dec   treeidx    ; play last section again
-DoReset1 lda   #0         ; set load to main memory
+         beq   DoReset1             ; already at the beginning, don't adjust
+         dec   treeidx              ; play last section again
+DoReset1 lda   #0                   ; set load to main memory
          sta   auxreq
-         sta   blkidx     ; clear entries
+         sta   blkidx               ; clear entries
          lda   VidSize
          sta   sizehi
          jsr   hddrdwrpart
@@ -705,53 +708,52 @@ Exit3    jmp   Exit
 EmuTest
 
 ; Sweet16?
-         ldx   #0         ; Test floating bus 256 times
--        sta   SS_Float   ; tickle Sweet16
-         lda   SS_Float   ; load value from bus
-         cmp   #$16       ; Sweet16? (returns $16 when tickled, $30 otherwise)
-         bne   +          ; definitely not
-         dex              ; potentially yes, keep going for 256 tests
+         ldx   #0                   ; Test floating bus 256 times
+-        sta   SS_Float             ; tickle Sweet16
+         lda   SS_Float             ; load value from bus
+         cmp   #$16                 ; Sweet16? (returns $16 when tickled, $30 otherwise)
+         bne   +                    ; definitely not
+         dex                        ; potentially yes, keep going for 256 tests
          bne   -
-         jmp   EmuFix     ; yes, so patch code to avoid page flipping
+         jmp   EmuFix               ; yes, so patch code to avoid page flipping
 +
 
 ; Virtual ][?
-         ldx   #0         ; Test floating bus 256 times
--        lda   SS_Float   ; load value from bus; Virtual ][ always returns $00
-         bne   +          ; definitely not
-         dex              ; potentially yes, keep going for 256 tests
+         ldx   #0                   ; Test floating bus 256 times
+-        lda   SS_Float             ; load value from bus; Virtual ][ always returns $00
+         bne   +                    ; definitely not
+         dex                        ; potentially yes, keep going for 256 tests
          bne   -
-         jmp   EmuTime    ; yes, adjust inter-frame VBL count
+         jmp   EmuTime              ; yes, adjust inter-frame VBL count
 +
 
 ; Not an emulator we care about, set default inter-frame VBL count
-         lda   #4         ; assume real hardware has overhead
-         sta   EmuVar     ; so wait less per frame
-
+         lda   #4                   ; assume real hardware has overhead
+         sta   EmuVar               ; so wait less per frame
          rts
 
 ; Patch page flipping routine to always load to and show page 1
 EmuFix   lda   #kOpcodeJMPabs
          sta   PageFlip
-         lda   #<EmuProc  ; set branch from normal playback routine
-         sta   PageFlip+1 ; during page flipping operations
-         lda   #>EmuProc  ; (which some emulators can't display properly)
-         sta   PageFlip+2 ; to slightly revised EmuProc routine
+         lda   #<EmuProc            ; set branch from normal playback routine
+         sta   PageFlip+1           ; during page flipping operations
+         lda   #>EmuProc            ; (which some emulators can't display properly)
+         sta   PageFlip+2           ; to slightly revised EmuProc routine
 
-         lda   VidSize    ; first load to page 1
+         lda   VidSize              ; first load to page 1
          sta   ldrhi
 
 ; Set inter-frame VBL count to account for lower loading overhead in emulators
-EmuTime  lda   #5         ; number of VBL to wait
+EmuTime  lda   #5                   ; number of VBL to wait
          sta   EmuVar
 
          rts
 
-EmuProc  bit   SS_Page1   ; always show Page 1
+EmuProc  bit   SS_Page1             ; always show Page 1
 
          lda   VidSize
-         sta   ldrhi      ; always load to page 1
-         jmp   ChkKey     ; Resume playback
+         sta   ldrhi                ; always load to page 1
+         jmp   ChkKey               ; Resume playback
 
 
 ; ****************************************************************
@@ -759,38 +761,38 @@ EmuProc  bit   SS_Page1   ; always show Page 1
 ; ****************************************************************
 
 TestGS   sec
-         jsr   ROM_TestGS ; does RTS on //e, clears carry on //gs
+         jsr   ROM_TestGS           ; does RTS on //e, clears carry on //gs
          bcc   SetGS
          clc
-         rts              ; not a //gs, just exit
+         rts                        ; not a //gs, just exit
 
 SetGS    lda   #0
-         sta   SS_Border  ; turn border color black - store/restore?
+         sta   SS_Border            ; turn border color black - store/restore?
 
          lda   SS_Speed
          and   #%01111111
-         sta   SS_Speed   ; sets processor speed to normal  - store/restore?
+         sta   SS_Speed             ; sets processor speed to normal  - store/restore?
 
-         lda   #kOpcodeBMI ; //gs reverses VBL, so
-         sta   VBLon+3    ; swap BPL for BMI
+         lda   #kOpcodeBMI          ; //gs reverses VBL, so
+         sta   VBLon+3              ; swap BPL for BMI
          lda   #kOpcodeBPL
-         sta   VBLoff+3   ; swap BMI for BPL
+         sta   VBLoff+3             ; swap BMI for BPL
 
-TestADM  tya              ; GS ID routine returns with ROM version in Y
-         cpy   #0         ; ROM 0?
+TestADM  tya                        ; GS ID routine returns with ROM version in Y
+         cpy   #0                   ; ROM 0?
          beq   +
-         cpy   #1         ; ROM 1?
+         cpy   #1                   ; ROM 1?
          beq   +
          lda   #' '
-         sta   $0800      ; Alternate Display Mode already on?
+         sta   $0800                ; Alternate Display Mode already on?
          lda   #$FF
-         jsr   ROM_Wait   ; skip a VBL cycle
+         jsr   ROM_Wait             ; skip a VBL cycle
 !cpu 65816
-         lda   $E00800    ; If yes, we shadow copied to bank $E0
+         lda   $E00800              ; If yes, we shadow copied to bank $E0
          cmp   #' '
-         beq   +          ; only call TEXT2COPY if we know it's off
-!cpu 6502                 ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
-+        jsr   ROM_Text2Copy         ; set Alternate Display Mode on IIgs
+         beq   +                    ; only call TEXT2COPY if we know it's off
+!cpu 6502   ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
++        jsr   ROM_Text2Copy        ; set Alternate Display Mode on IIgs
 ;+
 ++       rts
 
@@ -818,9 +820,9 @@ SyncBuffer
 ; *                           Goodbye!                           *
 ; ****************************************************************
 
-Exit     jsr   saveslot   ; restore screen holes if lores was called (ProRWTS)
+Exit     jsr   saveslot             ; restore screen holes if lores was called (ProRWTS)
 
-         jsr   TestVBL    ; wait until v blank to change modes
+         jsr   TestVBL              ; wait until v blank to change modes
 
          sta   KeyStrobe
          sta   SS_Main
@@ -830,15 +832,15 @@ Exit     jsr   saveslot   ; restore screen holes if lores was called (ProRWTS)
          jsr   ROM_Text
          jsr   ROM_Home
 
-         inc   $3F4       ; invalidate reset vector
+         inc   $3F4                 ; invalidate reset vector
          jsr   MLI
-         !byte $65        ; ProDOS QUIT
+         !byte $65                  ; ProDOS QUIT
          !word ExitParms
 
 ExitParms
-         !byte 4          ; 4 parameters, of varying sizes
+         !byte 4                    ; 4 parameters, of varying sizes
          !byte 0
-         !word 0          ; none used
+         !word 0                    ; none used
          !byte 0
          !word 0
 
