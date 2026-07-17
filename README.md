@@ -29,7 +29,12 @@ On the Apple IIe/IIc/IIɢꜱ, playback is throttled to 10fps.
 
 Build and install the ACME assembler from https://github.com/meonwax/acme
 
-Run `acme play.vids.system.a` to assemble. This generates `BASIS.SYSTEM#ff0000`
+Alternatively, you can install ACME via Homebrew on macOS.
+   ```
+   brew install acme
+   ```
+
+Run `acme play.vids.system.a` to assemble. This generates `BASIS.SYSTEM#ff0000`, which can then be placed on a disk image. To output a pre-assembled disk image, use `build.sh`.
 
 ## Packaging
 
