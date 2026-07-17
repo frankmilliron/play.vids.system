@@ -67,16 +67,17 @@ else
 fi
 
 # add QUIT.SYSTEM to drop to Bitsy Bye on boot
-cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/QUIT.SYSTEM" $outpath
-cadius ADDFILE $image $prodos_path "$outpath/QUIT.SYSTEM#FF2000"
+#cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/QUIT.SYSTEM" $outpath
+#cadius ADDFILE $image $prodos_path "$outpath/QUIT.SYSTEM#FF2000"
+
+# add PRODOS to make it bootable
+cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/PRODOS" $outpath
+cadius ADDFILE $image $prodos_path "$outpath/PRODOS#FF0000"
 
 # assemble video player & add it
 acme --outfile $outpath/BASIS.SYSTEM#FF0000 --report $outpath/play.vids.system.listing play.vids.system.a
 cadius ADDFILE $image $prodos_path $outpath/BASIS.SYSTEM#FF0000
 
-# add PRODOS to make it bootable
-cadius EXTRACTFILE $prodos_sysdisk_image "$prodos_sysdisk_path/PRODOS" $outpath
-cadius ADDFILE $image $prodos_path "$outpath/PRODOS#FF0000"
 
 cadius CHECKVOLUME $image
 $CADIUS CATALOG $image
