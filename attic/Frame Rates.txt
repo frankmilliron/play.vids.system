@@ -1,21 +1,26 @@
 
 With a FloppyEmu on my ROM4 //c:
 
-
 MTV.LOGO#5b1001 - GR mode
 399,360 bytes
 1024 bytes per frame
 390 frames
-
 vbl	53 sec - 7.35 frames per second
 no vbl	23 sec - 16.9 frames per second
-
-
 
 MAX.HEADROOM.1 - DGR mode
 1,718,272 bytes
 2048 bytes per frame
 839 frames
-
 vbl	2 min, 57 sec (177 sec) - 4.7 frames per second
 no vbl	1 min, 43 sec (103 sec) - 8.1 frames per second
+
+
+
+Old calculations from CFFA3000:
+
+     bytes frames/file fps    load time
+GR  - 1024 - 16384   - 80   - 0.0125 sec
+DGR - 2048 - 8192    - 40   - 0.025 sec
+HGR - 8192 - 2048    - 10   - 0.1 sec
+DHGR-16384 - 1024    -  5   - 0.2 sec
