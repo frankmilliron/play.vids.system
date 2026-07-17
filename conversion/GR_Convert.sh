@@ -1,7 +1,7 @@
 
 #!/bin/zsh
 
-# DGR_Convert.sh
+# GR_Convert.sh
 # Convert video for Apple // playback
 
 # Input video can be downloaded from YouTube using the following website
@@ -13,7 +13,7 @@ rm -rf ~/Desktop/out1
 mkdir ~/Desktop/out1
 
 echo "Extracting Frames from : $input"
-ffmpeg -i "$input" -vf "crop=ih/3*4:ih,scale=40:48" ~/Desktop/out1/FRAME.%05d.bmp
+ffmpeg -i "$input" -ss 0:00 -t 20:00 -vf "minterpolate='mi_mode=mci:mc_mode=aobmc:vsbmc=1:fps=10',crop=ih/3*4:ih,scale=40:48" ~/Desktop/out1/FRAME.%05d.bmp
 
 find ~/Desktop/out1 -type f -print0 | sort -zf | while IFS= read -r -d '' f; do
   echo;echo "Processing Frame: $f";echo

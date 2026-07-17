@@ -13,7 +13,7 @@ rm -rf ~/Desktop/out4
 mkdir ~/Desktop/out4
 
 echo "Extracting Frames from : $input"
-ffmpeg -i "$input" -vf "crop=ih/3*4:ih,scale=280:192" ~/Desktop/out4/FRAME.%05d.bmp
+ffmpeg -i "$input" -ss 0:00 -t 20:00 -vf "minterpolate='mi_mode=mci:mc_mode=aobmc:vsbmc=1:fps=10',crop=ih/3*4:ih,scale=280:192" ~/Desktop/out4/FRAME.%05d.bmp
 
 find ~/Desktop/out4 -type f -print0 | sort -zf | while IFS= read -r -d '' f; do
   echo;echo "Processing Frame: $f";echo
