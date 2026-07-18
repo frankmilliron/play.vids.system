@@ -102,7 +102,6 @@ SS_IOUDisOff   = $C07F              ; [IIc] write: enable $C058-$C05F IOU access
 ROM_Text2Copy  = $F962              ; turn on alternate display mode on //gs
 ROM_Home       = $FC58              ; clear text screen 1
 ROM_Text       = $FB2F              ; exit graphics mode
-ROM_Pwrup      = $FB6F              ; set reset vector checksum
 ROM_Wait       = $FCA8              ; not critical, only used for VBL check on //gs
 ROM_TestGS     = $FE1F              ; test for //gs
 
@@ -600,6 +599,8 @@ GrfxDHGR sta   SS_80col
 
 TestVBL  lda   MACHID               ; * self-modifying! (by TglVBL)
          and   #%11001000           ; bits 3, 6-7 give type
+         cmp   #%00000000           ; Do we have an original ][?
+         beq   IIplus
          cmp   #%01000000           ; Do we have a ][+?
          beq   IIplus               ; ][+ doesn't have VBL --- floating bus??
          cmp   #%10001000           ; Do we have a //c?
@@ -667,7 +668,8 @@ SetReset lda   #<DoReset
          sta   $3F2
          lda   #>DoReset
          sta   $3F3
-         jsr   ROM_Pwrup            ; set checksum
+         eor   #$A5
+         sta   $3F4                 ; set checksum
          rts
 
 DoReset  sta   KeyStrobe
