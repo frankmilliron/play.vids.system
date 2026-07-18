@@ -46,17 +46,15 @@ Build and install Cadius from https://github.com/mach-kernel/cadius
    ```
 2. Place video files on the disk image:
    ```
-   cadius ADDFILE vids.hdv examples/DGR#5B1002
-   cadius ADDFILE vids.hdv examples/DHGR#5B1004
-   cadius ADDFILE vids.hdv examples/GR#5B1001
-   cadius ADDFILE vids.hdv examples/HGR#5B1003
+   cadius ADDFILE vids.hdv example_videos/DGR#5B1002
+   cadius ADDFILE vids.hdv example_videos/DHGR#5B1004
+   cadius ADDFILE vids.hdv example_videos/GR#5B1001
+   cadius ADDFILE vids.hdv example_videos/HGR#5B1003
    ```
-3. Place `PRODOS` and `QUIT.SYSTEM` from [https://prodos8.com/](https://releases.prodos8.com/ProDOS_2_4_3.po) on the disk image:
+3. Place `PRODOS` from [https://prodos8.com/](https://releases.prodos8.com/ProDOS_2_4_3.po) on the disk image:
    ```
    cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/PRODOS .
-   cadius EXTRACTFILE ProDOS_2_4_3.po /PRODOS.2.4.3/QUIT.SYSTEM .
    cadius ADDFILE vids.hdv PRODOS#FF0000
-   cadius ADDFILE vids.hdv QUIT.SYSTEM#FF0000
    ```
 4. Place `BASIS.SYSTEM` on the disk image:
    ```

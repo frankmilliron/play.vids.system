@@ -29,7 +29,7 @@ function cadius {
 
 # set up variables
 
-imagename=VIDS.hdv
+imagename=vids.hdv
 prodos_vol=VIDS
 outpath=out
 image=$outpath/$imagename
