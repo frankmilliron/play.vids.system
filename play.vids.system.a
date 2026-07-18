@@ -204,6 +204,7 @@ GetAttributes
          cmp   #kVidTypeGR
          beq   +
          cmp   #kVidTypeHGR
+         beq   +
          ; TODO: This disallows 64K IIe w/ 80col, which should support DGR
          lda   MACHID     ; bits 6,7=10 = IIe/IIc/IIgs
          and   #%11110000 ; bits 4,5=11 = 128K
