@@ -106,7 +106,7 @@ trap "rmdir $tempdir" EXIT
 
 echo "Extracting frames from: $input"
 
-fps="2"
+fps="10"
 loglevel="error"
 start="00:00"
 end="20:00"
@@ -122,7 +122,7 @@ nframes=$(find "$tempdir" -type f -name "FRAME.*.bmp" | wc -l | xargs)
 echo "Processing $nframes frames..."
 
 find "$tempdir" -type f -print0 | sort -zf | while IFS= read -r -d '' f; do
-  echo "Processing frame: $f"
+  #echo "Processing frame: $f"
   dither="9" # Buckels
   b2d "$f" "$b2dformat" D"$dither" "$b2dalt" > /dev/null
   rm "$f"
