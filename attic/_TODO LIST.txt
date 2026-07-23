@@ -1,0 +1,25 @@
+
+Add mono mode to convert.sh
+start/end times should be start/duration
+
+DHGR mono in b2d??
+
+
+message/branding/usage when launching BASIS directly from Bitsy
+
+message when starting a video on a computer that doesn't support it
+
+
+EOF/frame tracking
+
+
+when pausing on hires/double hires videos, switch to mixed text/graphics screen and show current frame/total frames, branding, press space to resume, etc
+
+can we do this for lores modes as well? 
+
+
+Audio playback
+
+
+Chain playback of files with ".1" ".2" at the end
+
