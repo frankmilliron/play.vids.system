@@ -1,6 +1,5 @@
 
 Add mono mode to convert.sh
-start/end times should be start/duration
 
 DHGR mono in b2d??
 

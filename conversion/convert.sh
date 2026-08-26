@@ -109,9 +109,9 @@ echo "Extracting frames from: $input"
 fps="10"
 loglevel="error"
 start="00:00"
-end="20:00"
+dur="20:00"
 
-ffmpeg -i "$input" -ss "$start" -t "$end" -loglevel "$loglevel" \
+ffmpeg -i "$input" -ss "$start" -t "$dur" -loglevel "$loglevel" \
        -vf "minterpolate='mi_mode=mci:mc_mode=aobmc:vsbmc=1:fps=$fps',crop=ih/3*4:ih,scale=$scale" \
        "$tempdir/FRAME.%05d.bmp"
 
