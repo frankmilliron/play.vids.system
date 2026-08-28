@@ -148,6 +148,7 @@ kVidPage2HGR   = $4000
 kVidPageEORGR  = $0C00              ; XOR to alternate $400/$800
 kVidPageEORHGR = $6000              ; XOR to alternate $2000/$4000
 
+kOpcodeJSRabs  = $20
 kOpcodeBITabs  = $2C
 kOpcodeJMPabs  = $4C
 kOpcodeBMI     = $30
@@ -333,7 +334,6 @@ Relocated
          jsr   TestGS
          jsr   SetReset
          jsr   EmuTest
-         jsr   TestVBL              ; wait until v blank to change modes
 
          lda   #0
          sta   auxreq
@@ -557,7 +557,7 @@ Exit2    jmp   Exit
 ; ****************************************************************
 
 Grfx     lda   #kOpcodeBITabs
-         sta   SetGrfx              ; only need to call once
+         sta   SetGrfx              ; only need to call once, unless on ROM 0 or 1 IIgs
 
          sta   SS_Grfx
          sta   SS_Full
@@ -580,7 +580,22 @@ GrfxGR   sta   SS_40col
 GrfxDGR  sta   SS_80col
          sta   SS_Lores
          sta   SS_DblOn
-         rts
+
+         sec
+         jsr   ROM_TestGS           ; does RTS on //e, clears carry on //gs
+         bcs   +
+         tya                        ; GS ID routine returns with ROM version in Y
+         cpy   #3                   ; ROM 3? ADM will work
+         beq   +
+         clc
+         lda   #kOpcodeJSRabs
+         sta   SetGrfx
+         lda   #<ADMcopy            ; if on ROM 0 or 1 IIgs, copy AUX manually
+         sta   SetGrfx+1
+         lda   #>ADMcopy
+         sta   SetGrfx+2
+
++        rts
 
 GrfxHGR  sta   SS_40col
          sta   SS_Hires
@@ -619,9 +634,9 @@ NoVBL    rts
 
 IIplus   lda   VidType              ; we can't play DGR or DHGR on ][+   --message?
          cmp   #kVidTypeDGR
-         beq   Exit2
+         beq   Exit3
          cmp   #kVidTypeDHGR
-         beq   Exit2
+         beq   Exit3
          rts
 
 ; See Apple IIc Tech Note #9: Detecting VBL
@@ -786,10 +801,27 @@ TestADM  lda   #'X'
 !cpu 65816
          lda   $E00800              ; If yes, we shadow copied to bank $E0
          cmp   #'X'
-         beq   ++                   ; only call TEXT2COPY if we know it's off
+         beq   +                    ; only call TEXT2COPY if we know it's off
 !cpu 6502   ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
-+        jsr   ROM_Text2Copy        ; set Alternate Display Mode on IIgs
-++       rts
+         jsr   ROM_Text2Copy        ; set Alternate Display Mode on IIgs
++        rts
+
+ADMcopy  bit   SS_RdAux
+         ldx   #0                   ; fix ADM on IIgs ROM0 and ROM1 by just copying the data to shadow RAM page 2
+!cpu 65816
+-        lda   $800,x
+         sta   $E10800,x            ; copy lores page 2 to IIgs
+         lda   $900,x
+         sta   $E10900,x
+         lda   $A00,x
+         sta   $E10A00,x
+         lda   $B00,x
+         sta   $E10B00,x
+         inx
+         bne   -
+         bit   SS_RdMain
+!cpu 6502
+         rts
 
 
 ; ****************************************************************
