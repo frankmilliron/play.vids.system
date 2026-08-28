@@ -583,8 +583,7 @@ GrfxDGR  sta   SS_80col
 
          sec
          jsr   ROM_TestGS           ; does RTS on //e, clears carry on //gs
-         bcs   +
-         tya                        ; GS ID routine returns with ROM version in Y
+         bcs   +                    ; GS ID routine returns with ROM version in Y
          cpy   #3                   ; ROM 3? ADM will work
          beq   +
          clc
@@ -806,7 +805,7 @@ TestADM  lda   #'X'
          jsr   ROM_Text2Copy        ; set Alternate Display Mode on IIgs
 +        rts
 
-ADMcopy  bit   SS_RdAux
+ADMcopy  sta   SS_RdAux
          ldx   #0                   ; fix ADM on IIgs ROM0 and ROM1 by just copying the data to shadow RAM page 2
 !cpu 65816
 -        lda   $800,x
@@ -819,7 +818,7 @@ ADMcopy  bit   SS_RdAux
          sta   $E10B00,x
          inx
          bne   -
-         bit   SS_RdMain
+         sta   SS_RdMain
 !cpu 6502
          rts
 
