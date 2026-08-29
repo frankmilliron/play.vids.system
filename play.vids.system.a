@@ -581,15 +581,16 @@ GrfxDGR  sta   SS_80col
          sta   SS_Lores
          sta   SS_DblOn
 
+         ; On //gs ROM 0/1, need to manually shadow page2 from banks $00/$01 to $E0/$E1
          sec
          jsr   ROM_TestGS           ; does RTS on //e, clears carry on //gs
          bcs   +                    ; GS ID routine returns with ROM version in Y
-         cpy   #3                   ; ROM 3? ADM will work
+         cpy   #3                   ; //gs ROM 3 has hardware shadowing
          beq   +
          clc
          lda   #kOpcodeJSRabs
          sta   SetGrfx
-         lda   #<ADMcopy            ; if on ROM 0 or 1 IIgs, copy AUX manually
+         lda   #<ADMcopy            ; if on ROM 0 or 1 IIgs, copy page 2 to shadow RAM
          sta   SetGrfx+1
          lda   #>ADMcopy
          sta   SetGrfx+2
@@ -794,31 +795,38 @@ SetGS    lda   #0
          sta   VBLoff+3             ; swap BMI for BPL
 
 TestADM  lda   #'X'
-         sta   $0800                ; Alternate Display Mode already on?
+         sta   $0800                ; Alternate Display Mode on?
          lda   #$FF
          jsr   ROM_Wait             ; skip a VBL cycle
 !cpu 65816
          lda   $E00800              ; If yes, we shadow copied to bank $E0
          cmp   #'X'
-         beq   +                    ; only call TEXT2COPY if we know it's off
+         beq   +                    ; only call TEXT2COPY if ADM is turned off
 !cpu 6502   ; https://archive.org/details/develop-04_9010_October_1990/page/n51/mode/1up
          jsr   ROM_Text2Copy        ; set Alternate Display Mode on IIgs
 +        rts
 
-ADMcopy  sta   SS_RdAux
-         ldx   #0                   ; fix ADM on IIgs ROM0 and ROM1 by just copying the data to shadow RAM page 2
+ADMcopy  ldx   #0                   ; fix ADM on IIgs ROM0 and ROM1 by just copying the data to shadow RAM page 2
 !cpu 65816
--        lda   $800,x
-         sta   $E10800,x            ; copy lores page 2 to IIgs
-         lda   $900,x
+-        lda   $000800,x            ; copy lores page 2 main
+         sta   $E00800,x
+         lda   $000900,x
+         sta   $E00900,x
+         lda   $000A00,x
+         sta   $E00A00,x
+         lda   $000B00,x
+         sta   $E00B00,x
+
+         lda   $010800,x            ; copy lores page 2 aux
+         sta   $E10800,x
+         lda   $010900,x
          sta   $E10900,x
-         lda   $A00,x
+         lda   $010A00,x
          sta   $E10A00,x
-         lda   $B00,x
+         lda   $010B00,x
          sta   $E10B00,x
          inx
          bne   -
-         sta   SS_RdMain
 !cpu 6502
          rts
 
