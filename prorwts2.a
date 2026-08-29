@@ -70,7 +70,7 @@ ver_02 = 1
                 bounds_check = 1        ;set to 1 to prevent access beyond the end of the file
                 return_size  = 0        ;set to 1 to receive file size on open in read-only mode
                 one_shot     = 0        ;set to 1 to load entire file in one pass (avoids the need to specify size)
-                no_interrupts= 0        ;set to 1 to disable interrupts across calls
+                no_interrupts= 1        ;set to 1 to disable interrupts across calls
                 detect_err   = 0        ;set to 1 to to detect errors in no_interrupts mode
                 swap_zp      = 0        ;set to 1 to include code to preserve zpage
                                         ;used only by RWTS mode
