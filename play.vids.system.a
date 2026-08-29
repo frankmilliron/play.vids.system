@@ -585,16 +585,15 @@ GrfxDGR  sta   SS_80col
          sec
          jsr   ROM_TestGS           ; does RTS on //e, clears carry on //gs
          bcs   +                    ; GS ID routine returns with ROM version in Y
+         clc
          cpy   #3                   ; //gs ROM 3 has hardware shadowing
          beq   +
-         clc
          lda   #kOpcodeJSRabs
          sta   SetGrfx
          lda   #<ADMcopy            ; if on ROM 0 or 1 IIgs, copy page 2 to shadow RAM
          sta   SetGrfx+1
          lda   #>ADMcopy
          sta   SetGrfx+2
-
 +        rts
 
 GrfxHGR  sta   SS_40col
@@ -782,7 +781,9 @@ TestGS   sec
          clc
          rts                        ; not a //gs, just exit
 
-SetGS    lda   #0
+SetGS    jsr   ADMclr               ; clear the shadowed RAM page before showing it
+
+         lda   #0
          sta   SS_Border            ; turn border color black - store/restore?
 
          lda   SS_Speed
@@ -824,6 +825,22 @@ ADMcopy  ldx   #0                   ; fix ADM on IIgs ROM0 and ROM1 by just copy
          lda   $010A00,x
          sta   $E10A00,x
          lda   $010B00,x
+         sta   $E10B00,x
+         inx
+         bne   -
+!cpu 6502
+         rts
+
+ADMclr   ldx   #0                   ; clear shadow RAM page before showing it
+         txa
+!cpu 65816
+-        sta   $E00800,x            ; main
+         sta   $E00900,x
+         sta   $E00A00,x
+         sta   $E00B00,x
+         sta   $E10800,x            ; aux
+         sta   $E10900,x
+         sta   $E10A00,x
          sta   $E10B00,x
          inx
          bne   -
